@@ -1,0 +1,94 @@
+import logging
+from pathlib import Path
+from typing import Literal
+
+from pydantic import BaseModel, PostgresDsn
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+LOG_DEFAULT_FORMAT = (
+    "[%(asctime)s] | %(module)20s:%(lineno)-4d | %(levelname)-8s - %(message)s"
+)
+
+
+class LoggingConfig(BaseModel):
+    log_level: Literal[
+        "debug",
+        "info",
+        "warning",
+        "error",
+        "critical",
+    ] = "info"
+    log_format: str = LOG_DEFAULT_FORMAT
+
+    @property
+    def log_level_value(self) -> int:
+        return logging.getLevelNamesMapping()[self.log_level.upper()]
+
+
+class DatabaseConfig(BaseModel):
+    url: PostgresDsn
+    echo: bool = False
+    echo_pool: bool = False
+    max_overflow: int = 10
+    pool_size: int = 5
+
+    naming_convention: dict[str, str] = {
+        "ix": "ix_%(column_0_label)s",
+        "uq": "uq_%(table_name)s_%(column_0_N_name)s",
+        "ck": "ck_%(table_name)s_%(constraint_name)s",
+        "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+        "pk": "pk_%(table_name)s",
+    }
+
+
+class Telegram(BaseModel):
+    token: str
+    admin_chat_id: int
+
+
+class Parser(BaseModel):
+    text_for_replace_title: tuple[str] = (
+        " - купить по выгодным ценам в интернет-магазине OZON",
+        " — купить в интернет-магазине OZON с быстрой доставкой",
+        " - купить по доступным ценам в интернет-магазине OZON",
+        " - купить по выгодной цене в интернет-магазине OZON",
+    )
+    driver_path: str = BASE_DIR / "chrome/chromedriver"
+    example_url: str = BASE_DIR / "misc/example_url.png"
+
+
+class Uploader(BaseModel):
+    DIR = BASE_DIR / "uploads"
+
+
+class Schedule(BaseModel):
+    interval: int
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=(
+            BASE_DIR / ".env.template",
+            BASE_DIR / ".env",
+        ),
+        case_sensitive=False,
+        env_nested_delimiter="__",
+        env_prefix="APP_CONFIG__",
+    )
+    logging: LoggingConfig = LoggingConfig()
+    db: DatabaseConfig
+    telegram: Telegram
+    parser: Parser = Parser()
+    uploader: Uploader = Uploader()
+    schedule: Schedule
+
+
+settings = Settings()
+
+# Logging
+logging.basicConfig(
+    level=settings.logging.log_level_value,
+    format=settings.logging.log_format,
+)
