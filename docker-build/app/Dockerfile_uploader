@@ -13,7 +13,7 @@ COPY pyproject.toml poetry.lock ./
 
 # Устанавливаем зависимости (без dev-зависимостей)
 RUN poetry config virtualenvs.create false && \
-    poetry install --no-dev --no-interaction --no-ansi
+    poetry install
 
 # Копируем остальные файлы проекта
 COPY /src .
