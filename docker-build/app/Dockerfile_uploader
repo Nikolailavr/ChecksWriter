@@ -19,4 +19,4 @@ RUN poetry config virtualenvs.create false && \
 COPY /src .
 
 # Запускаем приложение
-CMD ["uvicorn", "photo_server:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.app.uploader:app", "--host", "0.0.0.0", "--port", "8000"]
