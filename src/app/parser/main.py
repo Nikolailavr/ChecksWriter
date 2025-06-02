@@ -56,7 +56,7 @@ class Parser:
             return
         logger.info(f"Start checking {url}")
         try:
-            await self.__get(url)
+            await self._get_by_photo()
             return ParseJSON(self.download_dir).parse_json()
         finally:
             if self.driver is not None:
@@ -78,6 +78,8 @@ class Parser:
 
             options.binary_location = "/usr/bin/chromium"
             options.add_argument("--headless=new")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--window-size=1920,1080")
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
 
@@ -89,42 +91,70 @@ class Parser:
             self.driver = None
             raise
 
-    async def __get(self, url: str):
-        self.driver.get(settings.parser.main_url)
-        await asyncio.sleep(1)
-        photo_tab = self.driver.find_element(
-            By.CSS_SELECTOR, 'a[href="#b-checkform_tab-qrfile"]'
-        )
-        photo_tab.click()
-        await asyncio.sleep(1)
-        # Вводим ссылку в input
-        logger.debug("Вводим ссылку в input")
-        input_field = self.driver.find_element(By.ID, "b-checkform_qrurl")
-        input_field.clear()
-        input_field.send_keys(url)
-        await asyncio.sleep(1)
-        # Нажимаем кнопку "Проверить"
-        logger.debug("Нажимаем кнопку " "Проверить" "")
-        container = self.driver.find_element(By.ID, "b-checkform_tab-qrfile")
-        submit_button = container.find_element(
-            By.CSS_SELECTOR, "button.b-checkform_btn-send"
-        )
-        submit_button.click()
-        await asyncio.sleep(2)
-        submit_button.click()
-        await asyncio.sleep(2)
-        wait = WebDriverWait(self.driver, 20)
-        # Кликаем по кнопке "Сохранить в"
-        save_dropdown_btn = wait.until(
-            EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, "div.b-check_btn-save button.dropdown-toggle")
+    async def _get_by_photo(self, filename: str = "image.jpg"):
+        try:
+            self.driver.get(settings.parser.main_url)
+
+            # Ожидаем и кликаем вкладку "Фото"
+            logger.info('Ожидаем и кликаем вкладку "Фото"')
+            photo_tab = WebDriverWait(self.driver, 20).until(
+                EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, 'a[href="#b-checkform_tab-qrfile"]')
+                )
             )
-        )
-        save_dropdown_btn.click()
-        await asyncio.sleep(1)
-        # Кликаем по пункту "JSON"
-        json_option = wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "a.b-check_btn-json"))
-        )
-        json_option.click()
-        await asyncio.sleep(5)
+            photo_tab.click()
+
+            # Находим элемент input типа file
+            logger.info("Находим элемент input типа file")
+            file_input = WebDriverWait(self.driver, 20).until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "input.b-checkform_qrfile[type='file']")
+                )
+            )
+            # Отправляем путь к файлу напрямую в input
+            logger.info("Отправляем путь к файлу напрямую в input")
+            logger.info(os.path.abspath(settings.uploader.DIR / filename))
+            file_input.send_keys(os.path.abspath(settings.uploader.DIR / filename))
+
+            # Нажимаем "Проверить"
+            logger.info('Нажимаем "Проверить"')
+            submit_button = WebDriverWait(self.driver, 20).until(
+                EC.element_to_be_clickable(
+                    (
+                        By.CSS_SELECTOR,
+                        "#b-checkform_tab-qrfile button.b-checkform_btn-send",
+                    )
+                )
+            )
+            submit_button.click()
+            await asyncio.sleep(3)
+
+            # Дожидаемся обработки (может потребоваться несколько попыток)
+            logger.info("Дожидаемся обработки")
+            for _ in range(3):
+                try:
+                    save_dropdown = WebDriverWait(self.driver, 5).until(
+                        EC.element_to_be_clickable(
+                            (
+                                By.CSS_SELECTOR,
+                                "div.b-check_btn-save button.dropdown-toggle",
+                            )
+                        )
+                    )
+                    save_dropdown.click()
+                    break
+                except:
+                    submit_button.click()
+                    await asyncio.sleep(2)
+
+            # Сохраняем в JSON
+            logger.info("Сохраняем в JSON")
+            json_button = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "a.b-check_btn-json"))
+            )
+            self.driver.execute_script("arguments[0].click();", json_button)
+            await asyncio.sleep(1)
+
+        except Exception as e:
+            logger.error(f"Ошибка при обработке чека: {str(e)}")
+            raise
