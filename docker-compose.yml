@@ -1,4 +1,8 @@
 services:
+  parser:
+    build:
+      dockerfile: ./docker-build/app/Dockerfile
+      context: ./
   app:
     build:
       dockerfile: ./docker-build/app/Dockerfile

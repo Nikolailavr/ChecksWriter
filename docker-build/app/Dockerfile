@@ -44,8 +44,4 @@ RUN poetry install
 
 COPY /src .
 
-RUN chmod +x prestart.sh
-RUN chmod +x run
-
-ENTRYPOINT ["./prestart.sh"]
-CMD ["./run"]
+CMD ["python3", "app/parser/main.py"]
