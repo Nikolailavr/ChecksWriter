@@ -3,7 +3,7 @@ FROM python:3.13.3-slim-bookworm
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-WORKDIR /app
+WORKDIR /src
 
 # Устанавливаем системные зависимости для Chromium
 RUN apt-get update && apt-get install -y \
@@ -44,4 +44,4 @@ RUN poetry install
 
 COPY /src .
 
-CMD ["python3", "app/parser/main.py"]
+CMD ["python3", "main.py"]
