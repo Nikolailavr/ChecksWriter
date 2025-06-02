@@ -49,18 +49,11 @@ class Telegram(BaseModel):
 
 
 class Parser(BaseModel):
-    text_for_replace_title: tuple[str] = (
-        " - купить по выгодным ценам в интернет-магазине OZON",
-        " — купить в интернет-магазине OZON с быстрой доставкой",
-        " - купить по доступным ценам в интернет-магазине OZON",
-        " - купить по выгодной цене в интернет-магазине OZON",
-    )
-    driver_path: str = BASE_DIR / "chrome/chromedriver"
-    example_url: str = BASE_DIR / "misc/example_url.png"
+    main_url: str = "https://proverkacheka.com/"
 
 
 class Uploader(BaseModel):
-    DIR = BASE_DIR / "uploads"
+    DIR: str = BASE_DIR / "uploads"
 
 
 class Schedule(BaseModel):
