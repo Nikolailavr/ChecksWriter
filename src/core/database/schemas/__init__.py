@@ -3,8 +3,13 @@ __all__ = (
     "ImageBase",
     "ImageCreate",
     "ImageUpdate",
-    "",
+    "ImageStatus",
 )
 
 from .users import UserBase
-from .images import ImageBase, ImageCreate, ImageUpdate
+from .images import (
+    ImageBase,
+    ImageCreate,
+    ImageUpdate,
+    ImageStatus,
+)

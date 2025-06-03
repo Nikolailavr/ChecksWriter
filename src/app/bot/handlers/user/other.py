@@ -7,6 +7,7 @@ from aiogram import Router, F, Dispatcher, types
 from app.tasks.image_check import process_check
 
 from core import settings
+from core.services.images import ImageService
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -30,6 +31,8 @@ async def handle_photo(message: types.Message):
 
     # Сохраняем изображение
     await message.bot.download_file(file.file_path, filepath)
+
+    ImageService.get_or_create()
 
     # Запускаем задачу Celery
     task = process_check.delay(filepath)

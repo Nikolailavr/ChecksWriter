@@ -6,7 +6,7 @@ from core.database.schemas import UserBase
 
 class UserService:
     @staticmethod
-    async def get_or_create_user(telegram_id: int, phone: int = None) -> User:
+    async def get_or_create(telegram_id: int, phone: int = None) -> User:
         async with db_helper.get_session() as session:
             user_base = UserBase(
                 telegram_id=telegram_id,

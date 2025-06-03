@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.database.models import Image
-from core.database.schemas import ImageCreate, ImageUpdate, ImageStatus
+from core.database.schemas import (ImageCreate, ImageUpdate, ImageStatus,)
 
 
 class ImageRepository:
@@ -28,24 +28,30 @@ class ImageRepository:
             await self.session.rollback()
             raise e
 
-    async def get_by_id(self, image_id: int) -> Optional[Image]:
-        """Получение изображения по ID"""
-        result = await self.session.execute(select(Image).where(Image.id == image_id))
-        return result.scalar_one_or_none()
+    async def get(
+        self,
+        filename: str = None,
+        user_id: int = None,
+    ) -> Optional[Image] | list[Image] | None:
+        if filename:
+            result = await self.session.execute(
+                select(Image).where(Image.filename == filename)
+            )
+            return result.scalar_one_or_none()
+        elif user_id:
+            result = await self.session.execute(
+                select(Image).where(Image.user_id == user_id)
+            )
+            return result.scalars().all()
+        return None
 
-    async def get_by_user(self, user_id: int) -> list[Image]:
-        """Получение всех изображений пользователя"""
-        result = await self.session.execute(
-            select(Image).where(Image.user_id == user_id)
-        )
-        return result.scalars().all()
 
-    async def update(self, image_id: int, update_data: ImageUpdate) -> Optional[Image]:
+    async def update(self, filename: str, update_data: ImageUpdate) -> Optional[Image]:
         """Обновление данных изображения"""
         try:
             await self.session.execute(
                 update(Image)
-                .where(Image.id == image_id)
+                .where(Image.filename == filename)
                 .values(
                     category=update_data.category,
                     processing_status=update_data.processing_status,
@@ -54,15 +60,15 @@ class ImageRepository:
                 )
             )
             await self.session.commit()
-            return await self.get_by_id(image_id)
+            return await self.get(filename=filename)
         except SQLAlchemyError as e:
             await self.session.rollback()
             raise e
 
-    async def delete(self, image_id: int) -> bool:
+    async def delete(self, filename: str) -> bool:
         """Удаление изображения"""
         try:
-            await self.session.execute(delete(Image).where(Image.id == image_id))
+            await self.session.execute(delete(Image).where(Image.filename == filename))
             await self.session.commit()
             return True
         except SQLAlchemyError as e:
@@ -70,13 +76,13 @@ class ImageRepository:
             raise e
 
     async def update_status(
-        self, image_id: int, status: ImageStatus, result_data: Optional[str] = None
+        self, filename: str, status: ImageStatus, result_data: Optional[str] = None
     ) -> Optional[Image]:
         """Обновление статуса обработки изображения"""
         try:
             await self.session.execute(
                 update(Image)
-                .where(Image.id == image_id)
+                .where(Image.filename == filename)
                 .values(
                     processing_status=status,
                     result_data=result_data,
@@ -84,7 +90,7 @@ class ImageRepository:
                 )
             )
             await self.session.commit()
-            return await self.get_by_id(image_id)
+            return await self.get(filename=filename)
         except SQLAlchemyError as e:
             await self.session.rollback()
             raise e
