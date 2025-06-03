@@ -18,4 +18,4 @@ class User(Base):
     images: Mapped[list["Image"]] = relationship(back_populates="user")
 
     # Связь с чеками
-    receipts: Mapped[list["Receipt"]] = relationship(back_populates="user")
+    receipts: Mapped[list["Receipt"]] = relationship(back_populates="user_rel")

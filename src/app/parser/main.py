@@ -1,5 +1,6 @@
 import asyncio
 import glob
+import json
 import logging
 import os
 import shutil
@@ -37,7 +38,7 @@ class ParseJSON:
 
         # Читаем содержимое файла
         with open(json_file_path, "r", encoding="utf-8") as f:
-            json_content = f.read()
+            json_content = json.load(f)
         logger.info(json_content)
         return json_content
 

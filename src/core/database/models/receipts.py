@@ -29,16 +29,15 @@ class Receipt(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     # Связь с пользователем
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.telegram_id"), nullable=False
     )
-    user: Mapped["User"] = relationship(back_populates="receipts")
-
     category: Mapped[str] = mapped_column(String, nullable=True)
-    message_fiscal_sign: Mapped[int] = mapped_column(BigInteger, nullable=False)
     code: Mapped[int] = mapped_column(Integer, nullable=False)
+    message_fiscal_sign: Mapped[int] = mapped_column(BigInteger, nullable=False)
+
     fiscal_drive_number: Mapped[str] = mapped_column(String(16), nullable=False)
     kkt_reg_id: Mapped[str] = mapped_column(String(20), nullable=False)
     user_inn: Mapped[str] = mapped_column(String(12), nullable=False)
@@ -53,6 +52,7 @@ class Receipt(Base):
     total_sum: Mapped[int] = mapped_column(Integer, nullable=False)
     fiscal_document_format_ver: Mapped[int] = mapped_column(Integer, nullable=False)
     buyer: Mapped[Optional[str]] = mapped_column(Text)
+    user: Mapped[str] = mapped_column(String)
     cash_total_sum: Mapped[int] = mapped_column(Integer, default=0)
     ecash_total_sum: Mapped[int] = mapped_column(Integer, default=0)
     prepaid_sum: Mapped[int] = mapped_column(Integer, default=0)
@@ -74,10 +74,10 @@ class Receipt(Base):
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default="now()"
     )
-
     items: Mapped[List["ReceiptItem"]] = relationship(
         back_populates="receipt", cascade="all, delete-orphan"
     )
+    user_rel: Mapped["User"] = relationship(back_populates="receipts")
 
 
 class ReceiptItem(Base):

@@ -46,12 +46,12 @@ async def handle_photo(msg: types.Message):
 
 
 @router.message(F.text)
-async def handle_category(message: types.Message):
-    if message.from_user.id not in user_states:
+async def handle_category(msg: types.Message):
+    if msg.from_user.id not in user_states:
         return
 
-    filename = user_states.pop(message.from_user.id)
-    category_name = message.text.strip()
+    filename = user_states.pop(msg.from_user.id)
+    category_name = msg.text.strip()
 
     await ImageService.update(
         filename=filename,
@@ -61,7 +61,11 @@ async def handle_category(message: types.Message):
     parser = Parser()
     try:
         result = parser.check(filename)
-        await ReceiptService.save_receipt(result)
+        await ReceiptService.save_receipt(
+            data=result,
+            telegram_id=msg.from_user.id,
+            category=category_name,
+        )
     except Exception as ex:
         logger.error(ex)
     finally:
