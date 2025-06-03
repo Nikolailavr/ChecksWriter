@@ -109,7 +109,7 @@ class Receipt(Base):
         TIMESTAMP(timezone=True), server_default="now()"
     )
     items: Mapped[List["ReceiptItem"]] = relationship(
-        back_populates="receipts", cascade="all, delete-orphan"
+        back_populates="receipt", cascade="all, delete-orphan"
     )
     user_rel: Mapped["User"] = relationship(back_populates="receipts")
 
@@ -129,4 +129,4 @@ class ReceiptItem(Base):
     payment_type: Mapped[Optional[int]] = mapped_column(Integer)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    receipts: Mapped["Receipt"] = relationship(back_populates="items")
+    receipt: Mapped["Receipt"] = relationship(back_populates="items")
