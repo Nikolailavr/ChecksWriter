@@ -47,16 +47,16 @@ class Parser:
         self.driver = None
         self.download_dir = None
 
-    def check(self, url: str):
+    def check(self, filename: str):
         self.download_dir = tempfile.mkdtemp()
         if self.driver is None:
             self._driver_run()
         if not self.driver:
             logger.error("Driver not initialized. Skipping check.")
             return
-        logger.info(f"Start checking {url}")
+        logger.info(f"Start checking file={filename}")
         try:
-            self._get_by_photo()
+            self._get_by_photo(filename)
             return ParseJSON(self.download_dir).parse_json()
         finally:
             if self.driver is not None:
@@ -116,36 +116,18 @@ class Parser:
             logger.info(os.path.abspath(settings.uploader.DIR / filename))
             file_input.send_keys(os.path.abspath(settings.uploader.DIR / filename))
 
-            # Нажимаем "Проверить"
-            logger.info('Нажимаем "Проверить"')
-            submit_button = WebDriverWait(self.driver, 20).until(
+            time.sleep(5)
+            # Дожидаемся обработки (может потребоваться несколько попыток)
+            logger.info("Дожидаемся обработки")
+            save_dropdown = WebDriverWait(self.driver, 20).until(
                 EC.element_to_be_clickable(
                     (
                         By.CSS_SELECTOR,
-                        "#b-checkform_tab-qrfile button.b-checkform_btn-send",
+                        "div.b-check_btn-save button.dropdown-toggle",
                     )
                 )
             )
-            submit_button.click()
-            time.sleep(3)
-
-            # Дожидаемся обработки (может потребоваться несколько попыток)
-            logger.info("Дожидаемся обработки")
-            for _ in range(3):
-                try:
-                    save_dropdown = WebDriverWait(self.driver, 5).until(
-                        EC.element_to_be_clickable(
-                            (
-                                By.CSS_SELECTOR,
-                                "div.b-check_btn-save button.dropdown-toggle",
-                            )
-                        )
-                    )
-                    save_dropdown.click()
-                    break
-                except:
-                    submit_button.click()
-                    time.sleep(2)
+            save_dropdown.click()
 
             # Сохраняем в JSON
             logger.info("Сохраняем в JSON")
