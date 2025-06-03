@@ -5,7 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.database.models import Image
-from core.database.schemas import (ImageCreate, ImageUpdate, ImageStatus,)
+from core.database.schemas import (
+    ImageCreate,
+    ImageUpdate,
+    ImageStatus,
+)
 
 
 class ImageRepository:
@@ -44,7 +48,6 @@ class ImageRepository:
             )
             return result.scalars().all()
         return None
-
 
     async def update(self, filename: str, update_data: ImageUpdate) -> Optional[Image]:
         """Обновление данных изображения"""
