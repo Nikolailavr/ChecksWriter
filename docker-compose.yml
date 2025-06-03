@@ -21,14 +21,6 @@ services:
           target: /app
         - action: rebuild
           path: ./poetry.lock
-  photo-server:
-    build:
-      dockerfile: ./docker-build/app/Dockerfile_uploader
-      context: ./
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./uploads:/app/uploads
 
   pg:
     image: postgres:16.9

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 
 from sqlalchemy import (
     UniqueConstraint,
@@ -15,6 +15,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database.models import Base
 
+if TYPE_CHECKING:
+    from .users import User
+
 
 class Receipt(Base):
     __table_args__ = (
@@ -27,6 +30,13 @@ class Receipt(Base):
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    # Связь с пользователем
+    user_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("users.telegram_id"), nullable=False
+    )
+    user: Mapped["User"] = relationship(back_populates="receipts")
+
+    category: Mapped[str] = mapped_column(String, nullable=True)
     message_fiscal_sign: Mapped[int] = mapped_column(BigInteger, nullable=False)
     code: Mapped[int] = mapped_column(Integer, nullable=False)
     fiscal_drive_number: Mapped[str] = mapped_column(String(16), nullable=False)
@@ -52,7 +62,6 @@ class Receipt(Base):
     applied_taxation_type: Mapped[Optional[int]] = mapped_column(Integer)
     operator: Mapped[Optional[str]] = mapped_column(Text)
     operator_inn: Mapped[Optional[str]] = mapped_column(String(12))
-    user: Mapped[Optional[str]] = mapped_column(Text)
     retail_place: Mapped[Optional[str]] = mapped_column(Text)
     region: Mapped[Optional[str]] = mapped_column(String(10))
     number_kkt: Mapped[Optional[str]] = mapped_column(String(20))

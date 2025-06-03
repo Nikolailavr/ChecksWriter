@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 from typing import Literal
 
@@ -60,6 +61,11 @@ class Schedule(BaseModel):
     interval: int
 
 
+class Celery(BaseModel):
+    BROKER_URL: str
+    RESULT_BACKEND: str
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(
@@ -76,9 +82,13 @@ class Settings(BaseSettings):
     parser: Parser = Parser()
     uploader: Uploader = Uploader()
     schedule: Schedule
+    celery: Celery
 
 
 settings = Settings()
+
+# Создаем папку для изображений, если ее нет
+os.makedirs(settings.uploader.DIR, exist_ok=True)
 
 # Logging
 logging.basicConfig(
