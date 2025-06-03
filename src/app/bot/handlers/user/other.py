@@ -8,6 +8,7 @@ from core import settings
 logger = logging.getLogger(__name__)
 router = Router()
 
+
 @router.message(F.photo)
 async def handle_photo(message: types.Message):
     # Создаем папку для изображений, если ее нет
@@ -57,6 +58,7 @@ async def handle_category(message: types.Message):
         await session.commit()
 
     await message.answer(f"Изображение сохранено в категорию '{category_name}'")
+
 
 def register_users_other_handlers(dp: Dispatcher) -> None:
     dp.include_router(router)
