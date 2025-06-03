@@ -11,10 +11,12 @@ router = Router()
 
 @router.message(Command("start"))
 async def __start(msg: Message) -> None:
-    text = f"Привет, <b>{msg.from_user.first_name}</b>!\n{settings.msg.HELP_MESSAGE}"
-    await msg.answer(text)
-    await UserService.get_or_create_user(telegram_id=msg.from_user.id)
-
+    await msg.answer(
+        "Привет! Отправь мне изображение, и я сохраню его в указанной категории.\n"
+        "Доступные команды:\n"
+        "/categories - Показать все категории\n"
+        "/images <категория> - Показать изображения в категории"
+    )
 
 
 def register_users_handlers(dp: Dispatcher) -> None:
