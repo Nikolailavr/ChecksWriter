@@ -36,8 +36,7 @@ class Receipt(Base):
     )
     category: Mapped[str] = mapped_column(String, nullable=True)
     code: Mapped[int] = mapped_column(Integer, nullable=False)
-    message_fiscal_sign: Mapped[int] = mapped_column(BigInteger, nullable=False)
-
+    message_fiscal_sign: Mapped[int] = mapped_column(Numeric(20, 0), nullable=False)
     fiscal_drive_number: Mapped[str] = mapped_column(String(16), nullable=False)
     kkt_reg_id: Mapped[str] = mapped_column(String(20), nullable=False)
     user_inn: Mapped[str] = mapped_column(String(12), nullable=False)
