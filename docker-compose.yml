@@ -62,6 +62,8 @@ services:
       /app
     environment:
       - PYTHONPATH=/app/src
+      - BROKER_URL=sqla+postgresql://user:password@pg/checks
+      - RESULT_BACKEND=db+postgresql://user:password@pg/checks
     depends_on:
       pg:
         condition: service_healthy
@@ -76,7 +78,7 @@ services:
       working_dir: /app
       environment:
         - PYTHONPATH=/app/src
-        - CELERY_BROKER_URL=sqla+postgresql://user:password@pg/checks
+        - BROKER_URL=sqla+postgresql://user:password@pg/checks
       ports:
         - "5555:5555"
       depends_on:
