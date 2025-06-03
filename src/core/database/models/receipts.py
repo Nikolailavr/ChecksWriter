@@ -36,7 +36,9 @@ class Receipt(Base):
     )
     receipt_id: Mapped[int] = mapped_column(
         Numeric(20, 0),
+        unique=True,
         nullable=False,
+        index=True,
     )
     user_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -117,7 +119,9 @@ class Receipt(Base):
 class ReceiptItem(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     receipt_id: Mapped[int] = mapped_column(
-        Numeric(20, 0), ForeignKey("receipts.receipt_id"), nullable=False
+        Numeric(20, 0),
+        ForeignKey("receipts.receipt_id"),
+        nullable=False,
     )
     unit: Mapped[str] = mapped_column(String(10), nullable=False)
     name: Mapped[str] = mapped_column(Text, nullable=False)

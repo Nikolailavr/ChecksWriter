@@ -1,7 +1,6 @@
 from core.database import db_helper
 from core.database.DAL import ReceiptRepository
 from core.database.schemas import ReceiptSchema
-from core.database.schemas.receipts import MetadataSchema, ReceiptItemSchema
 
 
 class ReceiptService:
