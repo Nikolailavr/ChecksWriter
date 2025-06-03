@@ -1,14 +1,8 @@
 from datetime import datetime
-from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 
-
-class ImageStatus(str, Enum):
-    PENDING = "pending"
-    PROCESSING = "processing"
-    DONE = "done"
-    FAILED = "failed"
+from core.database.models.images import ImageStatus
 
 
 class ImageBase(BaseModel):
@@ -23,7 +17,7 @@ class ImageCreate(ImageBase):
 
 class ImageUpdate(BaseModel):
     category: Optional[str] = Field(None, max_length=100)
-    processing_status: Optional[ImageStatus] = None
+    processing_status: Optional[ImageStatus] = ImageStatus.PENDING
     result_data: Optional[str] = None
 
 

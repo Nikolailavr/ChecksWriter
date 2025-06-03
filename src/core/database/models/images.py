@@ -10,19 +10,19 @@ from enum import Enum
 if TYPE_CHECKING:
     from .users import User
 
+class ImageStatus(str, Enum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    DONE = "done"
+    FAILED = "failed"
+
 
 class Image(Base):
-
-    class Status(Enum):
-        PENDING = "pending"
-        PROCESSING = "processing"
-        DONE = "done"
-        FAILED = "failed"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     filename: Mapped[str] = mapped_column(String(255))
     celery_task_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    processing_status: Mapped[Status] = mapped_column(default=Status.PENDING)
+    processing_status: Mapped[ImageStatus] = mapped_column(default=ImageStatus.PENDING)
     result_data: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     updated_at: Mapped[datetime | None] = mapped_column(

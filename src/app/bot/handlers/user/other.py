@@ -20,9 +20,6 @@ user_states: Dict[int, str] = {}
 
 @router.message(F.photo)
 async def handle_photo(msg: types.Message):
-    # Создаем папку для изображений, если ее нет
-    os.makedirs(IMAGE_FOLDER, exist_ok=True)
-
     # Генерируем уникальное имя файла
     file_id = msg.photo[-1].file_id
     file = await msg.bot.get_file(file_id)
