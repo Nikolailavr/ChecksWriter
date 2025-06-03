@@ -47,7 +47,7 @@ class Parser:
         self.driver = None
         self.download_dir = None
 
-    async def check(self, url: str):
+    def check(self, url: str):
         self.download_dir = tempfile.mkdtemp()
         if self.driver is None:
             self._driver_run()
@@ -56,7 +56,7 @@ class Parser:
             return
         logger.info(f"Start checking {url}")
         try:
-            await self._get_by_photo()
+            self._get_by_photo()
             return ParseJSON(self.download_dir).parse_json()
         finally:
             if self.driver is not None:
@@ -91,7 +91,7 @@ class Parser:
             self.driver = None
             raise
 
-    async def _get_by_photo(self, filename: str = "image.jpg"):
+    def _get_by_photo(self, filename: str = "image.jpg"):
         try:
             self.driver.get(settings.parser.main_url)
 
@@ -127,7 +127,7 @@ class Parser:
                 )
             )
             submit_button.click()
-            await asyncio.sleep(3)
+            time.sleep(3)
 
             # Дожидаемся обработки (может потребоваться несколько попыток)
             logger.info("Дожидаемся обработки")
@@ -145,7 +145,7 @@ class Parser:
                     break
                 except:
                     submit_button.click()
-                    await asyncio.sleep(2)
+                    time.sleep(2)
 
             # Сохраняем в JSON
             logger.info("Сохраняем в JSON")
@@ -153,7 +153,7 @@ class Parser:
                 EC.presence_of_element_located((By.CSS_SELECTOR, "a.b-check_btn-json"))
             )
             self.driver.execute_script("arguments[0].click();", json_button)
-            await asyncio.sleep(1)
+            time.sleep(1)
 
         except Exception as e:
             logger.error(f"Ошибка при обработке чека: {str(e)}")
