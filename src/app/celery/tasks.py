@@ -1,16 +1,8 @@
-from celery import Celery
 from app.parser.main import Parser
-
-from core import settings
-
-app = Celery(
-    "tasks",
-    broker=settings.celery.BROKER_URL,
-    backend=settings.celery.RESULT_BACKEND,
-)
+from app.celery.celery_app import celery_app
 
 
-@app.task(bind=True)
+@celery_app.task(bind=True)
 def process_check(self, image_path: str):
     """Задача Celery для обработки чека"""
     try:
@@ -20,7 +12,7 @@ def process_check(self, image_path: str):
         if not isinstance(result, dict):
             raise ValueError("Parser должен возвращать словарь")
 
-            # Сохраняем результаты в БД
+        # Сохраняем результаты в БД
         # await save_parsed_data(image_path, result)
 
         return {"status": "success", "result": result, "image_path": image_path}

@@ -12,7 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from core.database.models import Base
 
 
-class TaskResult(Base):
+class CeleryTaskResult(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     task_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -27,7 +27,7 @@ class TaskResult(Base):
     queue: Mapped[str] = mapped_column(String(100))
 
 
-class GroupResult(Base):
+class CeleryGroupResult(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     group_id: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     result: Mapped[object] = mapped_column(PickleType)

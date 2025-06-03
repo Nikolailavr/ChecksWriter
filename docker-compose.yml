@@ -51,5 +51,36 @@ services:
       pg:
         condition: service_healthy
 
+  celery:
+    build:
+      context: ./
+      dockerfile: ./docker-build/app/Dockerfile
+    command: celery -A app.celery.celery_app worker --loglevel=info
+    volumes:
+      - .:/app
+    working_dir:
+      /app
+    environment:
+      - PYTHONPATH=/app/src
+    depends_on:
+      pg:
+        condition: service_healthy
+
+  flower:
+      build:
+        context: .
+        dockerfile: ./docker-build/app/Dockerfile
+      command: flower --broker=sqla+postgresql://user:password@pg/checks --port=5555
+      volumes:
+        - .:/app
+      working_dir: /app
+      environment:
+        - PYTHONPATH=/app/src
+        - CELERY_BROKER_URL=sqla+postgresql://user:password@pg/checks
+      ports:
+        - "5555:5555"
+      depends_on:
+        pg:
+          condition: service_healthy
 volumes:
   pgdata:

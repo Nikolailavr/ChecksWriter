@@ -4,6 +4,8 @@ __all__ = (
     "ImageCreate",
     "ImageUpdate",
     "ImageStatus",
+    "ReceiptSchema",
+    "ReceiptItemSchema",
 )
 
 from .users import UserBase
@@ -13,3 +15,4 @@ from .images import (
     ImageUpdate,
     ImageStatus,
 )
+from .receipts import ReceiptSchema, ReceiptItemSchema
