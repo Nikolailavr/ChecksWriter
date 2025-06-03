@@ -1,125 +1,83 @@
-import os
-import uuid
-from pathlib import Path
-from typing import Dict
+import logging
+from aiogram import Router, Bot, Dispatcher
+from aiogram.types import Message
+from aiogram.filters import StateFilter
 
-from aiogram import Bot, Dispatcher, types, F
-from aiogram.filters import Command
-from aiogram.types import FSInputFile
-from sqlalchemy import select
+from core import settings
 
-from database import Session, Image, Category
-from config import Config
 
-bot = Bot(token=Config.TOKEN)
-dp = Dispatcher()
+logger = logging.getLogger(__name__)
+router = Router()
 
-# Временное хранилище для ожидания категорий
-user_states: Dict[int, str] = {}
 
-@dp.message(Command("start"))
-async def start(message: types.Message):
-    await message.answer(
-        "Привет! Отправь мне изображение, и я сохраню его в указанной категории.\n"
-        "Доступные команды:\n"
-        "/categories - Показать все категории\n"
-        "/images <категория> - Показать изображения в категории"
-    )
+@router.message(StateFilter(None))
+async def other_messages(msg: Message, bot: Bot) -> None:
+    """
+    Обработка всех текстовых сообщений
+    """
+    user = await UserService.get_or_create_user(telegram_id=msg.from_user.id)
+    match user.last_command:
+        case "/add":
+            await handle_add_link(msg, bot)
+            await UserService.update_last_command(
+                telegram_id=msg.from_user.id,
+                command="",
+            )
+        case "/delete":
+            await handle_delete_link(msg, bot)
+            await UserService.update_last_command(
+                telegram_id=msg.from_user.id,
+                command="",
+            )
+        case _:
+            await msg.answer(settings.msg.BAD_MSG)
+            await UserService.update_last_command(
+                telegram_id=msg.from_user.id,
+                command="",
+            )
 
-@dp.message(Command("categories"))
-async def list_categories(message: types.Message):
-    async with Session() as session:
-        result = await session.execute(select(Category))
-        categories = result.scalars().all()
 
-    if not categories:
-        await message.answer("Категории пока не добавлены")
-        return
+async def handle_add_link(msg: Message, bot: Bot) -> None:
+    """
+    Обработка добавления ссылки
+    """
+    if msg.text.startswith("https://www.ozon.ru/product/"):
+        url = msg.text.rstrip("/")  # Удаляем trailing slash
+        subscribe = SubscribeBase(telegram_id=msg.from_user.id, url=url)
+        try:
+            await SubscribeService.add(subscribe)
+            from parser import Parser
 
-    text = "Доступные категории:\n" + "\n".join([cat.name for cat in categories])
-    await message.answer(text)
+            await Parser().check(subscribe.url)
+            await bot.delete_message(
+                chat_id=msg.from_user.id, message_id=msg.message_id
+            )
+            await msg.answer(settings.msg.GOOD_URL)
+        except Exception as ex:
+            logger.error(f"Error adding link: {ex}")
+            await msg.answer(settings.msg.BAD_URL)
+    else:
+        await msg.answer(settings.msg.BAD_URL)
 
-@dp.message(Command("images"))
-async def list_images(message: types.Message):
-    args = message.text.split()
-    if len(args) < 2:
-        await message.answer("Укажите категорию: /images <категория>")
-        return
 
-    category_name = args[1]
-    async with Session() as session:
-        category = await session.scalar(
-            select(Category).where(Category.name == category_name)
+async def handle_delete_link(msg: Message, bot: Bot) -> None:
+    """
+    Обработка удаления ссылки
+    """
+    try:
+        await SubscribeService.delete(
+            subscribe=SubscribeBase(
+                telegram_id=msg.from_user.id,
+                url=msg.text,
+            )
         )
+        await bot.delete_message(chat_id=msg.from_user.id, message_id=msg.message_id)
+        await msg.answer(settings.msg.GOOD_DELETE)
+    except Exception as ex:
+        logger.error(f"Error deleting link: {ex}")
+        await msg.answer("Произошла ошибка при удалении ссылки")
 
-        if not category:
-            await message.answer(f"Категория '{category_name}' не найдена")
-            return
 
-        images = await session.scalars(
-            select(Image).where(Image.category_id == category.id)
-        )
-
-        if not images:
-            await message.answer(f"В категории '{category_name}' нет изображений")
-            return
-
-        for image in images:
-            photo = FSInputFile(image.filepath)
-            await message.answer_photo(photo, caption=f"Категория: {category_name}")
-
-@dp.message(F.photo)
-async def handle_photo(message: types.Message):
-    # Создаем папку для изображений, если ее нет
-    os.makedirs("images", exist_ok=True)
-
-    # Генерируем уникальное имя файла
-    file_id = message.photo[-1].file_id
-    file = await bot.get_file(file_id)
-    filename = f"{uuid.uuid4()}.jpg"
-    filepath = os.path.join("images", filename)
-
-    # Сохраняем изображение
-    await bot.download_file(file.file_path, filepath)
-
-    # Запоминаем файл и просим категорию
-    user_states[message.from_user.id] = filepath
-    await message.answer("Введите название категории для этого изображения:")
-
-@dp.message(F.text)
-async def handle_category(message: types.Message):
-    if message.from_user.id not in user_states:
-        return
-
-    filepath = user_states.pop(message.from_user.id)
-    category_name = message.text.strip()
-
-    async with Session() as session:
-        # Находим или создаем категорию
-        category = await session.scalar(
-            select(Category).where(Category.name == category_name)
-        )
-
-        if not category:
-            category = Category(name=category_name)
-            session.add(category)
-            await session.commit()
-            await session.refresh(category)
-
-        # Сохраняем изображение в БД
-        image = Image(
-            filename=os.path.basename(filepath),
-            filepath=filepath,
-            category_id=category.id
-        )
-        session.add(image)
-        await session.commit()
-
-    await message.answer(f"Изображение сохранено в категорию '{category_name}'")
-
-async def main():
-    await dp.start_polling(bot)
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+def register_other_handlers(dp: Dispatcher) -> None:
+    """Регистрация обработчиков"""
+    dp.include_router(router)
