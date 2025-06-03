@@ -4,7 +4,7 @@ import uuid
 from typing import Dict
 
 from aiogram import Router, F, Dispatcher, types
-from app.celery.celery_app import process_check
+from app.celery.tasks import process_check
 
 from core import settings
 from core.services.images import ImageService

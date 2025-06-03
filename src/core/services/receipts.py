@@ -10,4 +10,3 @@ class ReceiptService:
             receipt_data = ReceiptSchema.model_validate(data)
             receipt = await ReceiptRepository(session).create(receipt_data)
             return receipt
-

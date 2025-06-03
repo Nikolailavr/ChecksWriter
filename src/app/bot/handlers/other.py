@@ -1,9 +1,5 @@
 import logging
-from aiogram import Router, Bot, Dispatcher
-from aiogram.types import Message
-from aiogram.filters import StateFilter
-
-from core import settings
+from aiogram import Router, Dispatcher
 
 
 logger = logging.getLogger(__name__)

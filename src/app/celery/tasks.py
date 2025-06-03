@@ -1,5 +1,8 @@
+import asyncio
+
 from app.parser.main import Parser
 from app.celery.celery_app import celery_app
+from core.services.receipts import ReceiptService
 
 
 @celery_app.task(bind=True)
@@ -13,7 +16,7 @@ def process_check(self, image_path: str):
             raise ValueError("Parser должен возвращать словарь")
 
         # Сохраняем результаты в БД
-        # await save_parsed_data(image_path, result)
+        asyncio.run(ReceiptService.save_receipt(result))
 
         return {"status": "success", "result": result, "image_path": image_path}
     except Exception as e:
