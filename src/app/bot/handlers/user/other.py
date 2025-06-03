@@ -36,10 +36,6 @@ async def handle_photo(msg: types.Message):
         filename=filename,
     )
 
-    # Запускаем задачу Celery
-    # task = process_check.delay(filepath)
-    # logger.info(f"Изображение сохранено. Обработка начата (ID задачи: {task.id})")
-
     # Запоминаем файл и просим категорию
     user_states[msg.from_user.id] = filename
     await msg.answer("Введите название категории для этого чека:")
@@ -47,6 +43,8 @@ async def handle_photo(msg: types.Message):
 
 @router.message(F.text)
 async def handle_category(msg: types.Message):
+    await msg.answer("🗳 Обработываю данные...")
+
     if msg.from_user.id not in user_states:
         return
 
@@ -58,19 +56,29 @@ async def handle_category(msg: types.Message):
         category=category_name,
     )
 
-    parser = Parser()
-    try:
-        result = parser.check(filename)
-        await ReceiptService.save_receipt(
-            data=result,
-            telegram_id=msg.from_user.id,
-            category=category_name,
-        )
-    except Exception as ex:
-        logger.error(ex)
-    finally:
-        os.remove(settings.uploader.DIR / filename)
-        await ImageService.delete(filename=filename)
+    # Запускаем задачу Celery
+    task = process_check.delay(
+        filename=filename,
+        telegram_id=msg.from_user.id,
+        category=category_name,
+    )
+    logger.info(f"Изображение сохранено. Обработка начата (ID задачи: {task.id})")
+
+    # parser = Parser()
+    # try:
+    #     result = parser.check(filename)
+    #     await ReceiptService.save_receipt(
+    #         data=result,
+    #         telegram_id=msg.from_user.id,
+    #         category=category_name,
+    #     )
+    #     await msg.answer("✅ Данные чека успешно внесены!")
+    # except Exception as ex:
+    #     logger.error(ex)
+    #     await msg.answer("❌ Ошибка, не удалось распознать")
+    # finally:
+    #     os.remove(settings.uploader.DIR / filename)
+    #     await ImageService.delete(filename=filename)
 
 
 def register_users_other_handlers(dp: Dispatcher) -> None:

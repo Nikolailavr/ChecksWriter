@@ -90,7 +90,7 @@ class Parser:
         except Exception as ex:
             logger.exception("Error in run driver")
             self.driver = None
-            raise
+            raise ex
 
     def _get_by_photo(self, filename: str = "image.jpg"):
         try:
@@ -104,6 +104,7 @@ class Parser:
                 )
             )
             photo_tab.click()
+            time.sleep(2)
 
             # Находим элемент input типа file
             logger.info("Находим элемент input типа file")
@@ -117,11 +118,11 @@ class Parser:
             logger.info(os.path.abspath(settings.uploader.DIR / filename))
             file_input.send_keys(os.path.abspath(settings.uploader.DIR / filename))
 
-            time.sleep(5)
-            # Дожидаемся обработки (может потребоваться несколько попыток)
+            time.sleep(2)
+            # Дожидаемся обработки
             logger.info("Дожидаемся обработки")
-            save_dropdown = WebDriverWait(self.driver, 20).until(
-                EC.element_to_be_clickable(
+            save_dropdown = WebDriverWait(self.driver, 30).until(
+                EC.presence_of_element_located(
                     (
                         By.CSS_SELECTOR,
                         "div.b-check_btn-save button.dropdown-toggle",
@@ -129,6 +130,7 @@ class Parser:
                 )
             )
             save_dropdown.click()
+            time.sleep(1)
 
             # Сохраняем в JSON
             logger.info("Сохраняем в JSON")
@@ -136,8 +138,8 @@ class Parser:
                 EC.presence_of_element_located((By.CSS_SELECTOR, "a.b-check_btn-json"))
             )
             self.driver.execute_script("arguments[0].click();", json_button)
-            time.sleep(1)
+            time.sleep(2)
 
-        except Exception as e:
-            logger.error(f"Ошибка при обработке чека: {str(e)}")
-            raise
+        except Exception as ex:
+            logger.error(f"Ошибка при обработке чека: {str(ex)}")
+            raise ex

@@ -123,7 +123,7 @@ class ReceiptItem(Base):
         ForeignKey("receipts.receipt_id"),
         nullable=False,
     )
-    unit: Mapped[str] = mapped_column(String(10), nullable=False)
+    unit: Mapped[Optional[str]] = mapped_column(String(10))
     name: Mapped[str] = mapped_column(Text, nullable=False)
     price: Mapped[int] = mapped_column(Integer, nullable=False)
     quantity: Mapped[float] = mapped_column(Numeric(10, 3), nullable=False)

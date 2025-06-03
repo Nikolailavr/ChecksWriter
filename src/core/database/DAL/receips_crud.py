@@ -29,6 +29,7 @@ class ReceiptRepository:
                 total_sum=receipt_schema.total_sum,
                 fiscal_document_format_ver=receipt_schema.fiscal_document_format_ver,
                 buyer=receipt_schema.buyer,
+                user=receipt_schema.user,
                 cash_total_sum=receipt_schema.cash_total_sum,
                 ecash_total_sum=receipt_schema.ecash_total_sum,
                 prepaid_sum=receipt_schema.prepaid_sum,

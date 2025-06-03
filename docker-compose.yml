@@ -1,8 +1,4 @@
 services:
-  parser:
-    build:
-      dockerfile: ./docker-build/app/Dockerfile
-      context: ./
   app:
     build:
       dockerfile: ./docker-build/app/Dockerfile
@@ -84,5 +80,10 @@ services:
       depends_on:
         pg:
           condition: service_healthy
+  redis:
+    image: redis:8
+    container_name: redis
+    ports:
+      - "6379:6379"
 volumes:
   pgdata:
