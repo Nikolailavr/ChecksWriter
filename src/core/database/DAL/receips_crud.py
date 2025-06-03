@@ -12,6 +12,7 @@ class ReceiptRepository:
     async def create(self, receipt_schema: ReceiptSchema) -> Receipt:
         try:
             receipt = Receipt(
+                receipt_id=receipt_schema.metadata.id,
                 user_id=receipt_schema.user_id,
                 category=receipt_schema.category,
                 code=receipt_schema.code,
@@ -41,7 +42,6 @@ class ReceiptRepository:
                 region=receipt_schema.region,
                 number_kkt=receipt_schema.number_kkt,
                 redefine_mask=receipt_schema.redefine_mask,
-                metadata_id=receipt_schema.metadata.id,
                 ofd_id=receipt_schema.metadata.ofd_id,
                 receive_date=receipt_schema.metadata.receive_date,
                 subtype=receipt_schema.metadata.subtype,

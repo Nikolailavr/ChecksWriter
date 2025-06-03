@@ -29,27 +29,60 @@ class Receipt(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    # Связь с пользователем
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        primary_key=True,
+        autoincrement=True,
+    )
+    receipt_id: Mapped[int] = mapped_column(
+        Numeric(20, 0),
+        nullable=False,
+    )
     user_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("users.telegram_id"), nullable=False
+        BigInteger,
+        ForeignKey("users.telegram_id"),
+        nullable=False,
     )
     category: Mapped[str] = mapped_column(String, nullable=True)
     code: Mapped[int] = mapped_column(Integer, nullable=False)
-    message_fiscal_sign: Mapped[int] = mapped_column(Numeric(20, 0), nullable=False)
+    message_fiscal_sign: Mapped[int] = mapped_column(
+        Numeric(20, 0),
+        nullable=False,
+    )
     fiscal_drive_number: Mapped[str] = mapped_column(String(16), nullable=False)
     kkt_reg_id: Mapped[str] = mapped_column(String(20), nullable=False)
     user_inn: Mapped[str] = mapped_column(String(12), nullable=False)
-    fiscal_document_number: Mapped[int] = mapped_column(Integer, nullable=False)
-    date_time: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True), nullable=False
+    fiscal_document_number: Mapped[int] = mapped_column(
+        Numeric(20, 0),
+        nullable=False,
     )
-    fiscal_sign: Mapped[int] = mapped_column(Integer, nullable=False)
-    shift_number: Mapped[int] = mapped_column(Integer, nullable=False)
-    request_number: Mapped[int] = mapped_column(Integer, nullable=False)
-    operation_type: Mapped[int] = mapped_column(Integer, nullable=False)
-    total_sum: Mapped[int] = mapped_column(Integer, nullable=False)
-    fiscal_document_format_ver: Mapped[int] = mapped_column(Integer, nullable=False)
+    date_time: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+    )
+    fiscal_sign: Mapped[int] = mapped_column(
+        Numeric(20, 0),
+        nullable=False,
+    )
+    shift_number: Mapped[int] = mapped_column(
+        Numeric(20, 0),
+        nullable=False,
+    )
+    request_number: Mapped[int] = mapped_column(
+        Numeric(20, 0),
+        nullable=False,
+    )
+    operation_type: Mapped[int] = mapped_column(
+        Numeric(20, 0),
+        nullable=False,
+    )
+    total_sum: Mapped[int] = mapped_column(
+        Numeric(20, 0),
+        nullable=False,
+    )
+    fiscal_document_format_ver: Mapped[int] = mapped_column(
+        Numeric(20, 0), nullable=False
+    )
     buyer: Mapped[Optional[str]] = mapped_column(Text)
     user: Mapped[str] = mapped_column(String)
     cash_total_sum: Mapped[int] = mapped_column(Integer, default=0)
@@ -64,8 +97,10 @@ class Receipt(Base):
     retail_place: Mapped[Optional[str]] = mapped_column(Text)
     region: Mapped[Optional[str]] = mapped_column(String(10))
     number_kkt: Mapped[Optional[str]] = mapped_column(String(20))
-    redefine_mask: Mapped[Optional[int]] = mapped_column(Integer)
-    metadata_id: Mapped[Optional[int]] = mapped_column(BigInteger)
+    redefine_mask: Mapped[Optional[int]] = mapped_column(
+        Numeric(20, 0),
+        nullable=False,
+    )
     ofd_id: Mapped[Optional[str]] = mapped_column(String(10))
     receive_date: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP(timezone=True))
     subtype: Mapped[Optional[str]] = mapped_column(String(20))
@@ -74,14 +109,16 @@ class Receipt(Base):
         TIMESTAMP(timezone=True), server_default="now()"
     )
     items: Mapped[List["ReceiptItem"]] = relationship(
-        back_populates="receipt", cascade="all, delete-orphan"
+        back_populates="receipts", cascade="all, delete-orphan"
     )
     user_rel: Mapped["User"] = relationship(back_populates="receipts")
 
 
 class ReceiptItem(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    receipt_id: Mapped[int] = mapped_column(ForeignKey("receipts.id"), nullable=False)
+    receipt_id: Mapped[int] = mapped_column(
+        Numeric(20, 0), ForeignKey("receipts.receipt_id"), nullable=False
+    )
     unit: Mapped[str] = mapped_column(String(10), nullable=False)
     name: Mapped[str] = mapped_column(Text, nullable=False)
     price: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -92,4 +129,4 @@ class ReceiptItem(Base):
     payment_type: Mapped[Optional[int]] = mapped_column(Integer)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    receipt: Mapped["Receipt"] = relationship(back_populates="items")
+    receipts: Mapped["Receipt"] = relationship(back_populates="items")

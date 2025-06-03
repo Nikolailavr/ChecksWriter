@@ -29,6 +29,7 @@ class Image(Base):
     updated_at: Mapped[datetime | None] = mapped_column(
         onupdate=datetime.now, nullable=True
     )
+
     # Связь с пользователем
     user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.telegram_id"), nullable=False
