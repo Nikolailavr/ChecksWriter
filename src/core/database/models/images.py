@@ -10,6 +10,7 @@ from enum import Enum
 if TYPE_CHECKING:
     from .users import User
 
+
 class ImageStatus(str, Enum):
     PENDING = "pending"
     PROCESSING = "processing"

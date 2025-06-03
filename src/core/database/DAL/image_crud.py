@@ -52,6 +52,9 @@ class ImageRepository:
     async def update(self, filename: str, update_data: ImageUpdate) -> Optional[Image]:
         """Обновление данных изображения"""
         try:
+            if update_data.processing_status is None:
+                image = await self.get(filename=filename)
+                update_data.processing_status = image.processing_status
             await self.session.execute(
                 update(Image)
                 .where(Image.filename == filename)
