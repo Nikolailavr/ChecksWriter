@@ -10,10 +10,10 @@ from app.bot.handlers.user import (
 
 def register_all_handlers(dp: Dispatcher) -> None:
     handlers = (
+        register_users_list_handlers,
         register_users_handlers,
         register_users_other_handlers,
         register_other_handlers,
-        register_users_list_handlers,
     )
     for handler in handlers:
         handler(dp)

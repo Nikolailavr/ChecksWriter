@@ -55,7 +55,7 @@ async def show_receipts(callback: CallbackQuery):
 
     for receipt in receipts[start:end]:
         dt = receipt.date_time.strftime("%d.%m.%Y %H:%M")
-        builder.button(text=dt, callback_data=f"r:{receipt.id}")
+        builder.button(text=dt, callback_data=f"r:{receipt.receipt_id}")
 
     if start > 0:
         builder.button(text="⬅️", callback_data=f"cat:{category}:{page - 1}")
