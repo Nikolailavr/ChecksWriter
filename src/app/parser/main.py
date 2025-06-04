@@ -6,6 +6,7 @@ import os
 import shutil
 import tempfile
 import time
+from pathlib import Path
 
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
@@ -56,6 +57,11 @@ class Parser:
         if not self.driver:
             logger.error("Driver not initialized. Skipping check.")
             return
+        if Path(settings.uploader.DIR / filename).exists():
+            logger.info(f"Файл {filename} найден")
+        else:
+            logger.error(f"Файл {filename} не найден")
+            raise FileExistsError(f"Файл {filename} не найден")
         logger.info(f"Start checking file={filename}")
         try:
             self._get_by_photo(filename)
@@ -116,9 +122,7 @@ class Parser:
             )
             # Отправляем путь к файлу напрямую в input
             logger.info("Отправляем путь к файлу напрямую в input")
-            logger.info(
-                f"Путь файла: {os.path.abspath(settings.uploader.DIR / filename)}"
-            )
+            logger.info(f"Путь файла: {settings.uploader.DIR / filename}")
             file_input.send_keys(os.path.abspath(settings.uploader.DIR / filename))
 
             # Дожидаемся обработки

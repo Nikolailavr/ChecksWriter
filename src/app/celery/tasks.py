@@ -65,6 +65,8 @@ def process_check(self, data: dict):
             raise ValueError("Parser должен возвращать словарь")
         data["result"] = result
         return {"status": "success", "data": data}
+    except FileExistsError:
+        ...
     except BadQRCodeError:
         raise BadQRCodeError("Не удалось распознать QR-код")
     except Exception as e:

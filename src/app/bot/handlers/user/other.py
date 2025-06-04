@@ -32,6 +32,7 @@ async def handle_photo(msg: types.Message):
     filepath = os.path.join(IMAGE_FOLDER, filename)
 
     # Сохраняем изображение
+    logger.info(f"Сохраняем файл: {filepath}")
     await msg.bot.download_file(file.file_path, filepath)
 
     await ImageService.get_or_create(
