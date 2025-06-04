@@ -73,7 +73,7 @@ def task_success_handler(
     **kwargs,
 ):
     log.info(f"✅ Задача '{sender.name}' выполнена успешно")
-    success_check(result.get_categories("data", dict))
+    success_check(result.get("data", dict))
 
 
 # Ошибка при выполнении задачи
