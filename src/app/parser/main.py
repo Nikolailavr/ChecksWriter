@@ -99,7 +99,7 @@ class Parser:
 
             # Ожидаем и кликаем вкладку "Фото"
             logger.info('Ожидаем и кликаем вкладку "Фото"')
-            photo_tab = WebDriverWait(self.driver, 20).until(
+            photo_tab = WebDriverWait(self.driver, 10).until(
                 EC.element_to_be_clickable(
                     (By.CSS_SELECTOR, 'a[href="#b-checkform_tab-qrfile"]')
                 )
@@ -109,14 +109,16 @@ class Parser:
 
             # Находим элемент input типа file
             logger.info("Находим элемент input типа file")
-            file_input = WebDriverWait(self.driver, 20).until(
+            file_input = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located(
                     (By.CSS_SELECTOR, "input.b-checkform_qrfile[type='file']")
                 )
             )
             # Отправляем путь к файлу напрямую в input
             logger.info("Отправляем путь к файлу напрямую в input")
-            logger.info(os.path.abspath(settings.uploader.DIR / filename))
+            logger.info(
+                f"Путь файла: {os.path.abspath(settings.uploader.DIR / filename)}"
+            )
             file_input.send_keys(os.path.abspath(settings.uploader.DIR / filename))
 
             # Дожидаемся обработки
@@ -132,7 +134,7 @@ class Parser:
 
             logger.info("Ждем появления кнопки загрузки")
             save_dropdown = WebDriverWait(self.driver, 30).until(
-                EC.presence_of_element_located(
+                EC.element_to_be_clickable(
                     (
                         By.CSS_SELECTOR,
                         "div.b-check_btn-save button.dropdown-toggle",

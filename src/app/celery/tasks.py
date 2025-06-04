@@ -33,8 +33,7 @@ async def async_success_check(data: dict):
 
         await send_msg(chat_id=data["chat_id"], text="✅ Данные чека успешно внесены!")
     finally:
-        os.remove(settings.uploader.DIR / data["filename"])
-        await ImageService.delete(filename=data["filename"])
+        await remove_file(data)
 
 
 def failure_check(data: dict):
@@ -42,11 +41,18 @@ def failure_check(data: dict):
 
 
 async def async_failure_check(data: dict):
-    os.remove(settings.uploader.DIR / data["filename"])
-    await ImageService.delete(filename=data["filename"])
+    await remove_file(data)
     from app.bot.main import send_msg
 
     await send_msg(chat_id=data["chat_id"], text="❌ Ошибка, не удалось распознать!")
+
+
+async def remove_file(data: dict):
+    try:
+        os.remove(os.path.abspath(settings.uploader.DIR / data["filename"]))
+    except FileNotFoundError as ex:
+        log.error(f"[ERROR] File not found {settings.uploader.DIR / data["filename"]}")
+    await ImageService.delete(filename=data["filename"])
 
 
 @celery_app.task(bind=True)

@@ -1,8 +1,9 @@
 services:
-  app:
+  bot:
     build:
-      dockerfile: ./docker-build/app/Dockerfile
+      dockerfile: ./docker-build/app/Dockerfile_bot
       context: ./
+    command: python3 main.py
     environment:
       APP_CONFIG__DB__ECHO: 0
     ports:
@@ -10,13 +11,13 @@ services:
     depends_on:
       pg:
         condition: service_healthy
-    develop:
-      watch:
-        - action: sync+restart
-          path: ./src
-          target: /app
-        - action: rebuild
-          path: ./poetry.lock
+#    develop:
+#      watch:
+#        - action: sync+restart
+#          path: ./src
+#          target: /app
+#        - action: rebuild
+#          path: ./poetry.lock
 
   pg:
     image: postgres:16.9
@@ -51,35 +52,30 @@ services:
     build:
       context: ./
       dockerfile: ./docker-build/app/Dockerfile
-    command: celery -A app.celery.celery_app worker --loglevel=info
+    command: celery -A app.celery.celery_app worker --pool threads --loglevel=info
     volumes:
       - .:/app
     working_dir:
       /app
     environment:
       - PYTHONPATH=/app/src
-      - BROKER_URL=sqla+postgresql://user:password@pg/checks
-      - RESULT_BACKEND=db+postgresql://user:password@pg/checks
     depends_on:
-      pg:
-        condition: service_healthy
+      - redis
 
   flower:
       build:
         context: .
-        dockerfile: ./docker-build/app/Dockerfile
-      command: flower --broker=sqla+postgresql://user:password@pg/checks --port=5555
+        dockerfile: ./docker-build/app/Dockerfile_base
+      command: celery -A app.celery.celery_app flower --port=5555
       volumes:
         - .:/app
       working_dir: /app
       environment:
         - PYTHONPATH=/app/src
-        - BROKER_URL=sqla+postgresql://user:password@pg/checks
       ports:
         - "5555:5555"
       depends_on:
-        pg:
-          condition: service_healthy
+        - redis
   redis:
     image: redis:8
     container_name: redis
