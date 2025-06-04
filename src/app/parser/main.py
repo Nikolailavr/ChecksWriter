@@ -130,11 +130,11 @@ class Parser:
             time.sleep(2)
 
             # Скроллим до середины страницы
-            logger.info("Скроллим до середины страницы")
+            logger.info("Скроллим до конца страницы")
             self.driver.execute_script(
-                "window.scrollTo(0, document.body.scrollHeight / 2);"
+                "window.scrollTo(0, document.body.scrollHeight);"
             )
-            time.sleep(1)
+            time.sleep(2)
 
             logger.info("Ждем появления кнопки загрузки")
             save_dropdown = WebDriverWait(self.driver, 30).until(
