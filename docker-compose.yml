@@ -4,6 +4,8 @@ services:
       dockerfile: ./docker-build/app/Dockerfile_bot
       context: ./
     command: python3 main.py
+    volumes:
+      - shared-data:/app/shared
     environment:
       APP_CONFIG__DB__ECHO: 0
     ports:
@@ -54,7 +56,7 @@ services:
       dockerfile: ./docker-build/app/Dockerfile
     command: celery -A app.celery.celery_app worker --pool threads --loglevel=info
     volumes:
-      - .:/app
+      - shared-data:/app/shared
     working_dir:
       /app
     environment:
@@ -83,3 +85,4 @@ services:
       - "6379:6379"
 volumes:
   pgdata:
+  shared-data:
