@@ -1,4 +1,5 @@
 from aiogram import Router, F, Dispatcher
+from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from core.services.receipts import ReceiptService
@@ -8,7 +9,7 @@ router = Router()
 PER_PAGE = 5
 
 
-@router.message(F.text == "/list")
+@router.message(Command("list"))
 async def list_categories(msg: Message):
     categories = await ReceiptService.get_categories(msg.from_user.id)
     await show_categories(msg, categories, page=0)
