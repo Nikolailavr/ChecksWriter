@@ -95,7 +95,7 @@ class Parser:
 
     def _get_by_photo(self, filename: str = "image.jpg"):
         try:
-            self.driver.get(settings.parser.main_url)
+            self.driver.get_categories(settings.parser.main_url)
 
             # Ожидаем и кликаем вкладку "Фото"
             logger.info('Ожидаем и кликаем вкладку "Фото"')

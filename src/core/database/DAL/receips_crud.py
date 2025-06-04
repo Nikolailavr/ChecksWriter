@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -72,3 +75,34 @@ class ReceiptRepository:
         except SQLAlchemyError as e:
             await self.session.rollback()
             raise e
+
+    async def get(self, telegram_id: int, category: str = None) -> list[Receipt]:
+        try:
+            if category:
+                stmt = (
+                    select(Receipt)
+                    .where(Receipt.user_id == telegram_id, Receipt.category == category)
+                    .order_by(Receipt.date_time.desc())
+                )
+                result = await self.session.execute(stmt)
+                result = result.scalars().all()
+            else:
+                stmt = (
+                    select(Receipt.category)
+                    .where(Receipt.user_id == telegram_id)
+                    .distinct()
+                )
+                result = await self.session.execute(stmt)
+                result = [row[0] for row in result.fetchall() if row[0]]
+            return result
+        except SQLAlchemyError as ex:
+            raise ex
+
+    async def get_receipt(self, receipt_id: int) -> Sequence[ReceiptItem]:
+        try:
+            stmt = select(ReceiptItem).where(ReceiptItem.receipt_id == receipt_id)
+            result = await self.session.execute(stmt)
+            items = result.scalars().all()
+            return items
+        except SQLAlchemyError as ex:
+            raise ex
