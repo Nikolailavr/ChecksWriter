@@ -1,12 +1,12 @@
 from aiogram import Router, F, Dispatcher
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from core.services.receipts import ReceiptService
 
 router = Router()
 
-PER_PAGE = 5
+PER_PAGE = 6
 
 
 @router.message(Command("list"))
@@ -15,20 +15,41 @@ async def list_categories(msg: Message):
     await show_categories(msg, categories, page=0)
 
 
-async def show_categories(msg: Message, categories: list[str], page: int):
+async def show_categories(message: Message, categories: list[str], page: int):
     start = page * PER_PAGE
     end = start + PER_PAGE
-    builder = InlineKeyboardBuilder()
+    current_page_categories = categories[start:end]
 
-    for cat in categories[start:end]:
-        builder.button(text=cat, callback_data=f"cat:{cat}:0")
+    keyboard: list[list[InlineKeyboardButton]] = []
 
+    # Группируем категории по 2 в ряд (3 ряда максимум)
+    for i in range(0, len(current_page_categories), 2):
+        row = [
+            InlineKeyboardButton(
+                text=cat,
+                callback_data=f"cat:{cat}:0"
+            )
+            for cat in current_page_categories[i:i + 2]
+        ]
+        keyboard.append(row)
+
+    # Добавляем ряд с пагинацией
+    pagination_buttons = []
     if start > 0:
-        builder.button(text="⬅️ Назад", callback_data=f"cats:{page - 1}")
+        pagination_buttons.append(InlineKeyboardButton(
+            text="⬅️ Назад", callback_data=f"cats:{page - 1}")
+        )
     if end < len(categories):
-        builder.button(text="➡️ Далее", callback_data=f"cats:{page + 1}")
+        pagination_buttons.append(InlineKeyboardButton(
+            text="➡️ Далее", callback_data=f"cats:{page + 1}")
+        )
+    if pagination_buttons:
+        keyboard.append(pagination_buttons)
 
-    await msg.answer("Выберите категорию:", reply_markup=builder.as_markup())
+    await message.answer(
+        "Выберите категорию:",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard)
+    )
 
 
 @router.callback_query(F.data.startswith("cats:"))
@@ -73,7 +94,7 @@ async def show_receipt_items(callback: CallbackQuery):
     items = await ReceiptService.get_receipt(receipt_id)
     text = "🧾 Покупки:\n\n"
     for item in items:
-        text += f"{item.name} — {item.price} × {item.quantity} = {item.sum}\n"
+        text += f"{item.name} — {item.price * 0.01} × {item.quantity} = {item.sum * 0.01}\n"
 
     await callback.message.edit_text(text)
     await callback.answer()
