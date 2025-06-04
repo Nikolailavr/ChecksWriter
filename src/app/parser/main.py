@@ -12,6 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+from app.parser.exceptions import BadQRCodeError
 from core import settings
 
 logger = logging.getLogger(__name__)
@@ -118,9 +119,18 @@ class Parser:
             logger.info(os.path.abspath(settings.uploader.DIR / filename))
             file_input.send_keys(os.path.abspath(settings.uploader.DIR / filename))
 
-            time.sleep(2)
             # Дожидаемся обработки
             logger.info("Дожидаемся обработки")
+            time.sleep(2)
+
+            # Скроллим до середины страницы
+            logger.info("Скроллим до середины страницы")
+            self.driver.execute_script(
+                "window.scrollTo(0, document.body.scrollHeight / 2);"
+            )
+            time.sleep(1)
+
+            logger.info("Ждем появления кнопки загрузки")
             save_dropdown = WebDriverWait(self.driver, 30).until(
                 EC.presence_of_element_located(
                     (
@@ -142,4 +152,4 @@ class Parser:
 
         except Exception as ex:
             logger.error(f"Ошибка при обработке чека: {str(ex)}")
-            raise ex
+            raise BadQRCodeError

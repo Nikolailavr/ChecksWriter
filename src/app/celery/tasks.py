@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 
+from app.parser.exceptions import BadQRCodeError
 from app.parser.main import Parser
 from app.celery.celery_app import celery_app
 from core import settings
@@ -41,6 +42,8 @@ def failure_check(data: dict):
 
 
 async def async_failure_check(data: dict):
+    os.remove(settings.uploader.DIR / data["filename"])
+    await ImageService.delete(filename=data["filename"])
     from app.bot.main import send_msg
 
     await send_msg(chat_id=data["chat_id"], text="❌ Ошибка, не удалось распознать!")
@@ -56,8 +59,10 @@ def process_check(self, data: dict):
             raise ValueError("Parser должен возвращать словарь")
         data["result"] = result
         return {"status": "success", "data": data}
+    except BadQRCodeError:
+        raise BadQRCodeError("Не удалось распознать QR-код")
     except Exception as e:
-        self.retry(exc=e, countdown=60)
+        self.retry(exc=e, countdown=5, max_retries=2)
 
 
 # Успешное выполнение задачи
@@ -84,4 +89,4 @@ def task_failure_handler(
     **other,
 ):
     log.error(f"❌ Задача '{sender.name}' завершилась с ошибкой: {exception}")
-    failure_check(kwargs.get("data"))
+    failure_check(args[0])
