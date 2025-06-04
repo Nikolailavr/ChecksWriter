@@ -4,6 +4,7 @@ import uuid
 from typing import Dict
 
 from aiogram import Router, F, Dispatcher, types
+
 from app.celery.tasks import process_check
 from app.parser.main import Parser
 
@@ -56,12 +57,14 @@ async def handle_category(msg: types.Message):
         category=category_name,
     )
 
+    user_msg = {
+        "chat_id": msg.chat.id,
+        "filename": filename,
+        "telegram_id": msg.from_user.id,
+        "category": category_name,
+    }
     # Запускаем задачу Celery
-    task = process_check.delay(
-        filename=filename,
-        telegram_id=msg.from_user.id,
-        category=category_name,
-    )
+    task = process_check.delay(user_msg)
     logger.info(f"Изображение сохранено. Обработка начата (ID задачи: {task.id})")
 
     # parser = Parser()
