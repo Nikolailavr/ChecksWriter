@@ -12,21 +12,38 @@ from celery.signals import task_success, task_failure
 log = logging.getLogger(__name__)
 
 
-def do_other_check(data: dict):
-    asyncio.run(async_do_other(data))
+def success_check(data: dict):
+    asyncio.run(async_success_check(data))
 
 
-async def async_do_other(data: dict):
-    await ReceiptService.save_receipt(
-        data=data["result"],
-        telegram_id=data["telegram_id"],
-        category=data["category"],
-    )
-    os.remove(settings.uploader.DIR / data["filename"])
-    await ImageService.delete(filename=data["filename"])
+async def async_success_check(data: dict):
+    try:
+        await ReceiptService.save_receipt(
+            data=data["result"],
+            telegram_id=data["telegram_id"],
+            category=data["category"],
+        )
+    except Exception as ex:
+        from app.bot.main import send_msg
+
+        await send_msg(chat_id=data["chat_id"], text="❌ Ошибка, чек уже внесен")
+    else:
+        from app.bot.main import send_msg
+
+        await send_msg(chat_id=data["chat_id"], text="✅ Данные чека успешно внесены!")
+    finally:
+        os.remove(settings.uploader.DIR / data["filename"])
+        await ImageService.delete(filename=data["filename"])
+
+
+def failure_check(data: dict):
+    asyncio.run(async_failure_check(data))
+
+
+async def async_failure_check(data: dict):
     from app.bot.main import send_msg
 
-    await send_msg(chat_id=data["chat_id"], text="✅ Данные чека успешно внесены!")
+    await send_msg(chat_id=data["chat_id"], text="❌ Ошибка, не удалось распознать!")
 
 
 @celery_app.task(bind=True)
@@ -51,7 +68,7 @@ def task_success_handler(
     **kwargs,
 ):
     log.info(f"✅ Задача '{sender.name}' выполнена успешно")
-    do_other_check(result.get("data", dict))
+    success_check(result.get("data", dict))
 
 
 # Ошибка при выполнении задачи
@@ -67,3 +84,4 @@ def task_failure_handler(
     **other,
 ):
     log.error(f"❌ Задача '{sender.name}' завершилась с ошибкой: {exception}")
+    failure_check(kwargs.get("data"))
