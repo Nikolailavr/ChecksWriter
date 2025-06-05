@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 def success_check(data: dict):
     async def _async_success_check(data: dict):
         from app.bot.main import send_msg
+        filename = data.get("filename")
         try:
             logger.info(f"Забираем данные из redis для файла: {filename}")
             user_data = await redis_client.hgetall(f"receipt:{filename}")
@@ -43,13 +44,13 @@ def success_check(data: dict):
             logger.info("Отправка сообщения: ✅ Данные чека успешно внесены!")
             await send_msg(chat_id=chat_id, text="✅ Данные чека успешно внесены!")
         finally:
-            await redis_client.delete(f"receipt:{data.get("filename")}")
+            await redis_client.delete(f"receipt:{filename}")
 
     asyncio.run(_async_success_check(data), loop_factory=asyncio.new_event_loop)
 
 @celery_app.task
 def failure_check(filename: str):
-    async def _async_failure_check(data: dict):
+    async def _async_failure_check(filename: str):
         from app.bot.main import send_msg
         chat_id = None
         try:
