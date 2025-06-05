@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import redis.asyncio as redis
 
 from core import settings
