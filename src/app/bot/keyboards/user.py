@@ -112,6 +112,6 @@ def build_receipt_action_keyboard(receipt_id: int) -> InlineKeyboardMarkup:
                     text="❌ Удалить", callback_data=f"delete:{receipt_id}"
                 )
             ],
-            [InlineKeyboardButton(text="🔙 Назад", callback_data=f"receipts:0")],
+            [InlineKeyboardButton(text="🔙 Назад", callback_data=f"cats:0")],
         ]
     )
