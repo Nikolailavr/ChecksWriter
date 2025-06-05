@@ -1,5 +1,4 @@
 import logging
-import os
 from pathlib import Path
 from typing import Literal
 
@@ -86,9 +85,6 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
-# Создаем папку для изображений, если ее нет
-os.makedirs(settings.uploader.DIR, exist_ok=True)
 
 # Logging
 logging.basicConfig(

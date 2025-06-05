@@ -1,4 +1,5 @@
 import logging
+import os
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -19,6 +20,8 @@ async def send_msg(
 
 
 async def start_bot():
+    # Создаем папку для изображений, если ее нет
+    os.makedirs(settings.uploader.DIR, exist_ok=True)
     # Регистрация обработчиков
     register_all_handlers(dp)
 
