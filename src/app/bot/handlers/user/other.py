@@ -76,6 +76,7 @@ async def paginate_receipts(callback: CallbackQuery):
         telegram_id=callback.from_user.id,
         category=category,
     )
+    logger.info(f"{receipts=}")
     await show_receipts(callback.message, receipts, category, page, edit=True)
     await callback.answer()
 
