@@ -8,8 +8,8 @@ class HybridRedisClient:
         self.async_client = async_client
 
     def __getattr__(self, name):
-        async_method = getattr(self.async_client, name)
-
+        attr = getattr(self.async_client, name)
+        
         if asyncio.iscoroutinefunction(attr):
             # Оборачиваем async функцию
             def sync_method(*args, **kwargs):
