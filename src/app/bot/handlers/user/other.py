@@ -124,14 +124,14 @@ async def handle_category(msg: types.Message):
     filename = user_states.pop(msg.from_user.id)
     category_name = msg.text.strip()
 
-    user_msg = {
+    user_data = {
         "chat_id": msg.chat.id,
         "filename": filename,
         "telegram_id": msg.from_user.id,
         "category": category_name,
     }
     # Запускаем задачу Celery
-    task = process_check.delay(user_msg)
+    task = process_check.delay(user_data)
     logger.info(f"Изображение сохранено. Обработка начата (ID задачи: {task.id})")
 
     # parser = Parser()

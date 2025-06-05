@@ -11,8 +11,9 @@ from celery.signals import task_success, task_failure
 
 log = logging.getLogger(__name__)
 
+
 @celery_app.task(bind=True)
-def success_check(data: dict):
+def success_check(self, data: dict):
     asyncio.run(async_success_check(data))
 
 
@@ -34,7 +35,7 @@ async def async_success_check(data: dict):
 
 
 @celery_app.task(bind=True)
-def failure_check(data: dict):
+def failure_check(self, data: dict):
     asyncio.run(async_failure_check(data))
 
 
@@ -70,6 +71,7 @@ def process_check(self, data: dict):
     finally:
         remove_file(data)
 
+
 # Успешное выполнение задачи
 @task_success.connect
 def task_success_handler(
@@ -79,6 +81,7 @@ def task_success_handler(
 ):
     log.info(f"✅ Задача '{sender.name}' выполнена успешно")
     success_check.delay(result.get("data", dict))
+
 
 # Ошибка при выполнении задачи
 @task_failure.connect
