@@ -22,6 +22,7 @@ def success_check(data: dict):
 
 async def async_success_check(data: dict):
     from app.bot.main import send_msg
+
     user_data = await redis_client.hgetall(f"receipt:{data.get("filename")}")
     chat_id = int(user_data["chat_id"])
     try:
@@ -44,6 +45,7 @@ def failure_check(data: dict):
 
 async def async_failure_check(data: dict):
     from app.bot.main import send_msg
+
     user_data = await redis_client.hgetall(f"receipt:{data.get("filename")}")
     chat_id = int(user_data["chat_id"])
     await send_msg(chat_id=chat_id, text="❌ Ошибка, не удалось распознать!")
@@ -70,7 +72,7 @@ def process_check(self, filename: str):
 
 def remove_file(filename: str):
     try:
-        os.remove(os.path.abspath(settings.uploader.DIR /filename))
+        os.remove(os.path.abspath(settings.uploader.DIR / filename))
     except FileNotFoundError as ex:
         log.error(f"[ERROR] File not found {settings.uploader.DIR / filename}")
 

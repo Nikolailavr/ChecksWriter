@@ -38,10 +38,13 @@ async def handle_photo(msg: types.Message):
 
     # Сохраняем базовую информацию в Redis
     redis_key = f"receipt:{filename}"
-    await redis_client.hset(redis_key, mapping={
-        "telegram_id": msg.from_user.id,
-        "chat_id": msg.chat.id,
-    })
+    await redis_client.hset(
+        redis_key,
+        mapping={
+            "telegram_id": msg.from_user.id,
+            "chat_id": msg.chat.id,
+        },
+    )
     await redis_client.expire(redis_key, 600)  # TTL 10 минут
     await msg.answer("Введите название категории для этого чека:")
 
@@ -134,7 +137,7 @@ async def handle_category(msg: types.Message):
     await msg.answer("🗳 Обработываю данные...")
 
     # Запускаем задачу Celery
-    filename = await redis_client.hget(target_key, "filename")
+    filename = target_key.split(":", 1)[1]
     task = process_check.delay(filename)
     logger.info(f"Изображение сохранено. Обработка начата (ID задачи: {task.id})")
 
