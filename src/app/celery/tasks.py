@@ -37,11 +37,11 @@ def success_check(data: dict):
 
 
 @celery_app.task
-def failure_check(data: dict):
+def failure_check(filename: str):
     from app.bot.main import send_msg
 
     try:
-        user_data = redis_client.hgetall(f"receipt:{data.get("filename")}")
+        user_data = redis_client.hgetall(f"receipt:{filename}")
         chat_id = int(user_data["telegram_id"])
         send_msg(chat_id=chat_id, text="❌ Ошибка, не удалось распознать!")
     finally:
@@ -95,4 +95,4 @@ def task_failure_handler(
     logger.error(f"❌ Задача '{sender.name}' завершилась с ошибкой: {exception}")
 
     if sender.name == "app.celery.tasks.process_check" and args:
-        failure_check.delay(data=args[0])
+        failure_check.delay(filename=args[0])
