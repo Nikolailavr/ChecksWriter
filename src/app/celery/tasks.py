@@ -2,6 +2,8 @@ import asyncio
 import logging
 import os
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from app.parser.exceptions import BadQRCodeError
 from app.parser.main import Parser
 from app.celery.celery_app import celery_app
@@ -26,7 +28,8 @@ async def async_success_check(data: dict):
             telegram_id=data["telegram_id"],
             category=data["category"],
         )
-    except Exception as ex:
+    except SQLAlchemyError as ex:
+        log.error(f"[ERROR] {ex}")
         await send_msg(chat_id=data["chat_id"], text="❌ Ошибка, чек уже внесен")
     else:
         await send_msg(chat_id=data["chat_id"], text="✅ Данные чека успешно внесены!")

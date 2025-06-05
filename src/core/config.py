@@ -5,6 +5,8 @@ from typing import Literal
 from pydantic import BaseModel, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+import redis.asyncio as redis
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 LOG_DEFAULT_FORMAT = (
@@ -65,6 +67,11 @@ class Celery(BaseModel):
     RESULT_BACKEND: str
 
 
+class Redis(BaseModel):
+    HOST: str
+    PORT: int
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(
@@ -82,9 +89,17 @@ class Settings(BaseSettings):
     uploader: Uploader = Uploader()
     schedule: Schedule
     celery: Celery
+    redis: Redis
 
 
 settings = Settings()
+
+# Redis
+redis_client = redis.Redis(
+    host=settings.redis.HOST,
+    port=settings.redis.PORT,
+    decode_responses=True,  # чтобы не приходилось вручную декодировать строки
+)
 
 # Logging
 logging.basicConfig(
