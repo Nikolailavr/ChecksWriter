@@ -18,10 +18,11 @@ logger = logging.getLogger(__name__)
 @celery_app.task
 def success_check(data: dict):
     from app.bot.main import send_msg
-
+    logger.info("Забираем данные из redis")
     user_data = redis_client.hgetall(f"receipt:{data.get("filename")}")
     chat_id = int(user_data["telegram_id"])
     try:
+        logger.info("Сохраняем в Postgres")
         ReceiptService.save_receipt(
             data=data["result"],
             telegram_id=chat_id,
@@ -29,8 +30,10 @@ def success_check(data: dict):
         )
     except SQLAlchemyError as ex:
         logger.error(f"[ERROR] {ex}")
+        logger.info("Отправка сообщения: ❌ Ошибка, чек уже внесен")
         send_msg(chat_id=chat_id, text="❌ Ошибка, чек уже внесен")
     else:
+        logger.info("Отправка сообщения: ✅ Данные чека успешно внесены!")
         send_msg(chat_id=chat_id, text="✅ Данные чека успешно внесены!")
     finally:
         redis_client.delete(f"receipt:{data.get("filename")}")
@@ -41,8 +44,10 @@ def failure_check(filename: str):
     from app.bot.main import send_msg
 
     try:
+        logger.info("Забираем данные из redis")
         user_data = redis_client.hgetall(f"receipt:{filename}")
         chat_id = int(user_data["telegram_id"])
+        logger.info("Отправка сообщения: ❌ Ошибка, не удалось распознать!")
         send_msg(chat_id=chat_id, text="❌ Ошибка, не удалось распознать!")
     finally:
         redis_client.delete(f"receipt:{data.get("filename")}")
