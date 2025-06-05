@@ -13,13 +13,13 @@ services:
     depends_on:
       pg:
         condition: service_healthy
-#    develop:
-#      watch:
-#        - action: sync+restart
-#          path: ./src
-#          target: /app
-#        - action: rebuild
-#          path: ./poetry.lock
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./src
+          target: /app
+        - action: rebuild
+          path: ./poetry.lock
 
   pg:
     image: postgres:16.9
