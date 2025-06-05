@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 cel_helper = CeleryHelper()
 
 
-@celery_app.task
+@celery_app.task(queue="high")
 def success_check(data: dict):
     from app.bot.main import send_msg
 
@@ -53,7 +53,7 @@ def success_check(data: dict):
         redis_client.delete(f"receipt:{filename}")
 
 
-@celery_app.task
+@celery_app.task(queue="high")
 def failure_check(filename: str):
     from app.bot.main import send_msg
 
@@ -85,7 +85,7 @@ def failure_check(filename: str):
         redis_client.delete(f"receipt:{filename}")
 
 
-@celery_app.task(bind=True)
+@celery_app.task(bind=True, queue="low")
 def process_check(self, filename: str):
     """Задача Celery для обработки чека"""
     try:
