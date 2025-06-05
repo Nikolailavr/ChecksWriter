@@ -4,6 +4,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
 )
 
+from app.bot.handlers.other import logger
 from core.database.models import Receipt
 
 PER_PAGE = 6
@@ -66,10 +67,12 @@ async def show_receipts(
     # 4 ряда по 1 кнопке с чеком
     for receipt in current_page_receipts:
         date_str = receipt.date_time.strftime("%d.%m.%Y %H:%M")
+        callback_data = f"receipt:{str(receipt.receipt_id)}"
+        logger.info(f"{callback_data=}")
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    text=date_str, callback_data=f"receipt:{str(receipt.receipt_id)}"
+                    text=date_str, callback_data=callback_data
                 )
             ]
         )
