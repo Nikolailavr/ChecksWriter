@@ -36,6 +36,8 @@ async def async_success_check(data: dict):
         await send_msg(chat_id=chat_id, text="❌ Ошибка, чек уже внесен")
     else:
         await send_msg(chat_id=chat_id, text="✅ Данные чека успешно внесены!")
+    finally:
+        await redis_client.delete(f"receipt:{data.get("filename")}")
 
 
 @celery_app.task
@@ -45,10 +47,12 @@ def failure_check(data: dict):
 
 async def async_failure_check(data: dict):
     from app.bot.main import send_msg
-
-    user_data = await redis_client.hgetall(f"receipt:{data.get("filename")}")
-    chat_id = int(user_data["telegram_id"])
-    await send_msg(chat_id=chat_id, text="❌ Ошибка, не удалось распознать!")
+    try:
+        user_data = await redis_client.hgetall(f"receipt:{data.get("filename")}")
+        chat_id = int(user_data["telegram_id"])
+        await send_msg(chat_id=chat_id, text="❌ Ошибка, не удалось распознать!")
+    finally:
+        await redis_client.delete(f"receipt:{data.get("filename")}")
 
 
 @celery_app.task(bind=True)
