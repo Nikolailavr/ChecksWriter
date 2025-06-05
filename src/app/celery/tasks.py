@@ -12,7 +12,7 @@ from core.config import redis_client
 from core.services.receipts import ReceiptService
 from celery.signals import task_success, task_failure
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @celery_app.task
@@ -24,15 +24,15 @@ async def async_success_check(data: dict):
     from app.bot.main import send_msg
 
     user_data = await redis_client.hgetall(f"receipt:{data.get("filename")}")
-    chat_id = int(user_data["chat_id"])
+    chat_id = int(user_data["telegram_id"])
     try:
         await ReceiptService.save_receipt(
             data=data["result"],
-            telegram_id=user_data["telegram_id"],
+            telegram_id=chat_id,
             category=user_data["category"],
         )
     except SQLAlchemyError as ex:
-        log.error(f"[ERROR] {ex}")
+        logger.error(f"[ERROR] {ex}")
         await send_msg(chat_id=chat_id, text="❌ Ошибка, чек уже внесен")
     else:
         await send_msg(chat_id=chat_id, text="✅ Данные чека успешно внесены!")
@@ -47,7 +47,7 @@ async def async_failure_check(data: dict):
     from app.bot.main import send_msg
 
     user_data = await redis_client.hgetall(f"receipt:{data.get("filename")}")
-    chat_id = int(user_data["chat_id"])
+    chat_id = int(user_data["telegram_id"])
     await send_msg(chat_id=chat_id, text="❌ Ошибка, не удалось распознать!")
 
 
@@ -74,13 +74,13 @@ def remove_file(filename: str):
     try:
         os.remove(os.path.abspath(settings.uploader.DIR / filename))
     except FileNotFoundError as ex:
-        log.error(f"[ERROR] File not found {settings.uploader.DIR / filename}")
+        logger.error(f"[ERROR] File not found {settings.uploader.DIR / filename}")
 
 
 # Успешное выполнение задачи
 @task_success.connect
 def task_success_handler(sender=None, result=None, **kwargs):
-    log.info(f"✅ Задача '{sender.name}' выполнена успешно")
+    logger.info(f"✅ Задача '{sender.name}' выполнена успешно")
 
     # Проверка результата от process_check
     if sender.name == "app.celery.tasks.process_check" and isinstance(result, dict):
@@ -95,7 +95,7 @@ def task_success_handler(sender=None, result=None, **kwargs):
 def task_failure_handler(
     sender=None, task_id=None, exception=None, args=None, **kwargs
 ):
-    log.error(f"❌ Задача '{sender.name}' завершилась с ошибкой: {exception}")
+    logger.error(f"❌ Задача '{sender.name}' завершилась с ошибкой: {exception}")
 
     if sender.name == "app.celery.tasks.process_check" and args:
         failure_check.delay(data=args[0])

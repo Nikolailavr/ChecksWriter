@@ -42,7 +42,6 @@ async def handle_photo(msg: types.Message):
         redis_key,
         mapping={
             "telegram_id": msg.from_user.id,
-            "chat_id": msg.chat.id,
         },
     )
     await redis_client.expire(redis_key, 600)  # TTL 10 минут
