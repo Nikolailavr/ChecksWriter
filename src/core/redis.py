@@ -1,11 +1,18 @@
-import redis.asyncio as redis
+import redis.asyncio as async_redis
+import redis
+
 
 from core import settings
 
 # Redis
-redis_client = redis.Redis(
+async_redis_client = async_redis.Redis(
     host=settings.redis.HOST,
     port=settings.redis.PORT,
     decode_responses=True,  # чтобы не приходилось вручную декодировать строки
 )
 
+redis_client = redis.Redis(
+    host=settings.redis.HOST,
+    port=settings.redis.PORT,
+    decode_responses=True,
+)

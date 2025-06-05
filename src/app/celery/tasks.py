@@ -17,68 +17,62 @@ logger = logging.getLogger(__name__)
 
 @celery_app.task
 def success_check(data: dict):
-    async def _async_success_check(data: dict):
-        from app.bot.main import send_msg
-        filename = data.get("filename")
-        try:
-            logger.info(f"Забираем данные из redis для файла: {filename}")
-            user_data = await redis_client.hgetall(f"receipt:{filename}")
-            if not user_data:
-                logger.warning(f"Данные для receipt:{filename} не найдены в Redis.")
-                return
+    from app.bot.main import send_msg
+    filename = data.get("filename")
+    try:
+        logger.info(f"Забираем данные из redis для файла: {filename}")
+        user_data = redis_client.hgetall(f"receipt:{filename}")
+        if not user_data:
+            logger.warning(f"Данные для receipt:{filename} не найдены в Redis.")
+            return
 
-            chat_id_str = user_data.get("telegram_id") # Безопасное извлечение
-            if chat_id_str:
-                chat_id = int(chat_id_str)
-            logger.info("Сохраняем в Postgres")
-            await ReceiptService.save_receipt(
-                data=data["result"],
-                telegram_id=chat_id,
-                category=user_data["category"],
-            )
-        except SQLAlchemyError as ex:
-            logger.error(f"[ERROR] {ex}")
-            logger.info("Отправка сообщения: ❌ Ошибка, чек уже внесен")
-            await send_msg(chat_id=chat_id, text="❌ Ошибка, чек уже внесен")
-        else:
-            logger.info("Отправка сообщения: ✅ Данные чека успешно внесены!")
-            await send_msg(chat_id=chat_id, text="✅ Данные чека успешно внесены!")
-        finally:
-            await redis_client.delete(f"receipt:{filename}")
-
-    asyncio.run(_async_success_check(data), loop_factory=asyncio.new_event_loop)
+        chat_id_str = user_data.get("telegram_id") # Безопасное извлечение
+        if chat_id_str:
+            chat_id = int(chat_id_str)
+        logger.info("Сохраняем в Postgres")
+        ReceiptService.sync_save_receipt(
+            data=data["result"],
+            telegram_id=chat_id,
+            category=user_data["category"],
+        )
+    except SQLAlchemyError as ex:
+        logger.error(f"[ERROR] {ex}")
+        logger.info("Отправка сообщения: ❌ Ошибка, чек уже внесен")
+        send_msg(chat_id=chat_id, text="❌ Ошибка, чек уже внесен")
+    else:
+        logger.info("Отправка сообщения: ✅ Данные чека успешно внесены!")
+        send_msg(chat_id=chat_id, text="✅ Данные чека успешно внесены!")
+    finally:
+        redis_client.delete(f"receipt:{filename}")
 
 @celery_app.task
 def failure_check(filename: str):
-    async def _async_failure_check(filename: str):
-        from app.bot.main import send_msg
-        chat_id = None
-        try:
-            logger.info(f"Забираем данные из redis для файла: {filename}")
-            user_data = await redis_client.hgetall(f"receipt:{filename}")
-            if not user_data:
-                logger.warning(f"Данные для receipt:{filename} не найдены в Redis.")
-                return
-            chat_id_str = user_data.get("telegram_id")
-            if chat_id_str:
-                chat_id = int(chat_id_str)
-                logger.info(f"Отправка сообщения для chat_id {chat_id}: ❌ Ошибка, не удалось распознать {filename}!")
-                await send_msg(chat_id=chat_id, text=f"❌ Ошибка, не удалось распознать файл '{filename}'!")
-            else:
-                logger.warning(f"telegram_id не найден в user_data для receipt:{filename}")
+    from app.bot.main import send_msg
+    chat_id = None
+    try:
+        logger.info(f"Забираем данные из redis для файла: {filename}")
+        user_data = redis_client.hgetall(f"receipt:{filename}")
+        if not user_data:
+            logger.warning(f"Данные для receipt:{filename} не найдены в Redis.")
+            return
+        chat_id_str = user_data.get("telegram_id")
+        if chat_id_str:
+            chat_id = int(chat_id_str)
+            logger.info(f"Отправка сообщения для chat_id {chat_id}: ❌ Ошибка, не удалось распознать {filename}!")
+            send_msg(chat_id=chat_id, text=f"❌ Ошибка, не удалось распознать файл '{filename}'!")
+        else:
+            logger.warning(f"telegram_id не найден в user_data для receipt:{filename}")
 
-        except Exception as e:
-            logger.error(f"Произошла ошибка в failure_check для {filename}: {e}")
-            if chat_id:
-                try:
-                    await send_msg(chat_id=chat_id, text=f"❌ Произошла внутренняя ошибка при обработке неудачи для файла.")
-                except Exception as send_ex:
-                    logger.error(f"Не удалось отправить сообщение об ошибке в failure_check: {send_ex}")
-        finally:
-            logger.info(f"Удаляем ключ receipt:{filename} из Redis.")
-            await redis_client.delete(f"receipt:{filename}")
-
-    asyncio.run(_async_failure_check(data), loop_factory=asyncio.new_event_loop)
+    except Exception as e:
+        logger.error(f"Произошла ошибка в failure_check для {filename}: {e}")
+        if chat_id:
+            try:
+                send_msg(chat_id=chat_id, text=f"❌ Произошла внутренняя ошибка при обработке неудачи для файла.")
+            except Exception as send_ex:
+                logger.error(f"Не удалось отправить сообщение об ошибке в failure_check: {send_ex}")
+    finally:
+        logger.info(f"Удаляем ключ receipt:{filename} из Redis.")
+        redis_client.delete(f"receipt:{filename}")
 
 
 @celery_app.task(bind=True)

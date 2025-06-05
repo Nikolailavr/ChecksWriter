@@ -15,7 +15,7 @@ from app.celery.tasks import process_check
 from app.parser.main import Parser
 
 from core import settings
-from core.redis import redis_client
+from core.redis import async_redis_client
 from core.services.receipts import ReceiptService
 
 logger = logging.getLogger(__name__)
@@ -38,14 +38,14 @@ async def handle_photo(msg: types.Message):
 
     # Сохраняем базовую информацию в Redis
     redis_key = f"receipt:{filename}"
-    await redis_client.hset(
+    await async_redis_client.hset(
         redis_key,
         mapping={
             "telegram_id": msg.from_user.id,
             "category": "Общие",
         },
     )
-    await redis_client.expire(redis_key, 600)  # TTL 10 минут
+    await async_redis_client.expire(redis_key, 600)  # TTL 10 минут
     task = process_check.delay(filename)
     logger.info(f"Изображение сохранено. Обработка начата (ID задачи: {task.id})")
     await msg.answer("Введите название категории для этого чека:")
@@ -120,11 +120,11 @@ async def delete_receipt(callback: CallbackQuery):
 
 @router.message(F.text)
 async def handle_category(msg: types.Message):
-    keys = await redis_client.keys("receipt:*")
+    keys = await async_redis_client.keys("receipt:*")
     target_key = None
 
     for key in keys:
-        telegram_id = await redis_client.hget(key, "telegram_id")
+        telegram_id = await async_redis_client.hget(key, "telegram_id")
         if telegram_id == str(msg.from_user.id):
             target_key = key
             break
@@ -134,7 +134,7 @@ async def handle_category(msg: types.Message):
         return
 
     category = msg.text.strip()
-    await redis_client.hset(target_key, "category", category)
+    await async_redis_client.hset(target_key, "category", category)
 
     await msg.answer("🗳 Обработываю данные...")
 
