@@ -47,6 +47,7 @@ async def handle_photo(msg: types.Message):
 async def paginate_categories(callback: CallbackQuery):
     page = int(callback.data.split(":")[1])
     categories = await ReceiptService.get_categories(callback.from_user.id)
+    logger.info(f"{categories=}")
     if len(categories) == 0:
         await callback.message.answer("Категории не найдены.")
     else:
