@@ -25,6 +25,9 @@ async def __start(msg: Message) -> None:
 @router.message(Command("list"))
 async def list_categories(msg: Message):
     categories = await ReceiptService.get_categories(msg.from_user.id)
+    if not categories:
+        await msg.answer("Нет категорий")
+        return
     await show_categories(msg, categories, page=0, edit=False)
 
 

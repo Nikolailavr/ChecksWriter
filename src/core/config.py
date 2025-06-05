@@ -54,8 +54,7 @@ class Parser(BaseModel):
 
 
 class Uploader(BaseModel):
-    TEST: bool = True
-    DIR: str = Path("/app/shared/uploads")
+    DIR: str
 
 
 class Schedule(BaseModel):
@@ -81,7 +80,7 @@ class Settings(BaseSettings):
     db: DatabaseConfig
     telegram: Telegram
     parser: Parser = Parser()
-    uploader: Uploader = Uploader()
+    uploader: Uploader
     schedule: Schedule
     celery: Celery
 
@@ -89,10 +88,7 @@ class Settings(BaseSettings):
 settings = Settings()
 
 # Создаем папку для изображений, если ее нет
-if not settings.uploader.TEST:
-    os.makedirs(settings.uploader.DIR, exist_ok=True)
-else:
-    os.makedirs(BASE_DIR / "uploader", exist_ok=True)
+os.makedirs(settings.uploader.DIR, exist_ok=True)
 
 # Logging
 logging.basicConfig(
