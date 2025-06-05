@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @celery_app.task
 def success_check(data: dict):
-    run_async(async_success_check(data))
+    asyncio.run(async_success_check(data))
 
 
 async def async_success_check(data: dict):
@@ -45,7 +45,7 @@ async def async_success_check(data: dict):
 
 @celery_app.task
 def failure_check(filename: str):
-    run_async(async_failure_check(data))
+    asyncio.run(async_failure_check(data))
 
 async def async_failure_check(filename: str):
     from app.bot.main import send_msg
