@@ -42,9 +42,12 @@ async def handle_photo(msg: types.Message):
         redis_key,
         mapping={
             "telegram_id": msg.from_user.id,
+            "category": "Общие",
         },
     )
     await redis_client.expire(redis_key, 600)  # TTL 10 минут
+    task = process_check.delay(filename)
+    logger.info(f"Изображение сохранено. Обработка начата (ID задачи: {task.id})")
     await msg.answer("Введите название категории для этого чека:")
 
 
@@ -122,7 +125,7 @@ async def handle_category(msg: types.Message):
 
     for key in keys:
         telegram_id = await redis_client.hget(key, "telegram_id")
-        if str(telegram_id) == str(msg.from_user.id):
+        if telegram_id == str(msg.from_user.id):
             target_key = key
             break
 
@@ -134,26 +137,6 @@ async def handle_category(msg: types.Message):
     await redis_client.hset(target_key, "category", category)
 
     await msg.answer("🗳 Обработываю данные...")
-
-    # Запускаем задачу Celery
-    filename = target_key.split(":", 1)[1]
-    task = process_check.delay(filename)
-    logger.info(f"Изображение сохранено. Обработка начата (ID задачи: {task.id})")
-
-    # parser = Parser()
-    # try:
-    #     result = parser.check(filename)
-    #     await ReceiptService.save_receipt(
-    #         data=result,
-    #         telegram_id=msg.from_user.id,
-    #         category=category_name,
-    #     )
-    #     await msg.answer("✅ Данные чека успешно внесены!")
-    # except Exception as ex:
-    #     logger.error(ex)
-    #     await msg.answer("❌ Ошибка, не удалось распознать")
-    # finally:
-    #     os.remove(settings.uploader.DIR / filename)
 
 
 def register_users_other_handlers(dp: Dispatcher) -> None:
