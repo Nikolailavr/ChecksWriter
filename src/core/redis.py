@@ -1,6 +1,8 @@
 import asyncio
 import redis.asyncio as redis
 
+from core import settings
+
 class HybridRedisClient:
     def __init__(self, async_client):
         self.async_client = async_client
