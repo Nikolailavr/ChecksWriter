@@ -5,8 +5,6 @@ from typing import Literal
 from pydantic import BaseModel, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-import redis.asyncio as redis
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 LOG_DEFAULT_FORMAT = (

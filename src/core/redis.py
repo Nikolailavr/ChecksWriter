@@ -1,4 +1,5 @@
 import asyncio
+import redis.asyncio as redis
 
 class HybridRedisClient:
     def __init__(self, async_client):
