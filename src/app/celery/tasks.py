@@ -18,10 +18,16 @@ logger = logging.getLogger(__name__)
 @celery_app.task
 async def success_check(data: dict):
     from app.bot.main import send_msg
-    logger.info("Забираем данные из redis")
-    user_data = await redis_client.hgetall(f"receipt:{data.get("filename")}")
-    chat_id = int(user_data["telegram_id"])
     try:
+        logger.info(f"Забираем данные из redis для файла: {filename}")
+        user_data = await redis_client.hgetall(f"receipt:{filename}")
+        if not user_data:
+            logger.warning(f"Данные для receipt:{filename} не найдены в Redis.")
+            return
+
+        chat_id_str = user_data.get("telegram_id") # Безопасное извлечение
+        if chat_id_str:
+            chat_id = int(chat_id_str)
         logger.info("Сохраняем в Postgres")
         await ReceiptService.save_receipt(
             data=data["result"],
@@ -41,14 +47,34 @@ async def success_check(data: dict):
 @celery_app.task
 async def failure_check(filename: str):
     from app.bot.main import send_msg
+    chat_id = None # Инициализируем
     try:
-        logger.info("Забираем данные из redis")
+        logger.info(f"Забираем данные из redis для файла: {filename}")
         user_data = await redis_client.hgetall(f"receipt:{filename}")
-        chat_id = int(user_data["telegram_id"])
-        logger.info("Отправка сообщения: ❌ Ошибка, не удалось распознать!")
-        await send_msg(chat_id=chat_id, text="❌ Ошибка, не удалось распознать!")
+        if not user_data:
+            logger.warning(f"Данные для receipt:{filename} не найдены в Redis.")
+            # Решите, что делать дальше: может, просто выйти или залогировать и выйти
+            return # или continue to finally
+
+        chat_id_str = user_data.get("telegram_id") # Безопасное извлечение
+        if chat_id_str:
+            chat_id = int(chat_id_str)
+            logger.info(f"Отправка сообщения для chat_id {chat_id}: ❌ Ошибка, не удалось распознать {filename}!")
+            # Возможно, стоит передавать filename в сообщении пользователю
+            await send_msg(chat_id=chat_id, text=f"❌ Ошибка, не удалось распознать файл '{filename}'!")
+        else:
+            logger.warning(f"telegram_id не найден в user_data для receipt:{filename}")
+
+    except Exception as e: # Более общее исключение для логирования перед finally
+        logger.error(f"Произошла ошибка в failure_check для {filename}: {e}")
+        if chat_id: # Попытка уведомить, если chat_id известен
+            try:
+                await send_msg(chat_id=chat_id, text=f"❌ Произошла внутренняя ошибка при обработке неудачи для файла '{filename}'.")
+            except Exception as send_ex:
+                logger.error(f"Не удалось отправить сообщение об ошибке в failure_check: {send_ex}")
     finally:
-        await redis_client.delete(f"receipt:{data.get("filename")}")
+        logger.info(f"Удаляем ключ receipt:{filename} из Redis.")
+        await redis_client.delete(f"receipt:{filename}") # Исправлено
 
 
 @celery_app.task(bind=True)
@@ -60,11 +86,14 @@ def process_check(self, filename: str):
         if not isinstance(result, dict):
             raise ValueError("Parser должен возвращать словарь")
         return {"status": "success", "result": result, "filename": filename}
-    except FileExistsError:
-        ...
-    except BadQRCodeError:
-        raise BadQRCodeError("Не удалось распознать QR-код")
+    except FileNotFoundError as e:
+        logger.warning(f"Файл {filename} не найден парсером: {e}")
+        raise
+    except BadQRCodeError as e:
+        logger.warning(f"Не удалось распознать QR-код для {filename}: {e}")
+        raise
     except Exception as e:
+        logger.error(f"Общая ошибка при обработке {filename}: {e}, попытка {self.request.retries + 1} из {self.max_retries}")
         self.retry(exc=e, countdown=5, max_retries=2)
     finally:
         remove_file(filename)
