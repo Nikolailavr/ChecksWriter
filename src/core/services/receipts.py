@@ -34,5 +34,5 @@ class ReceiptService:
     @staticmethod
     async def delete_receipt(receipt_id: int):
         async with db_helper.get_session() as session:
-            await ReceiptRepository(session).get_receipt(receipt_id)
+            await ReceiptRepository(session).delete_receipt(receipt_id)
             return True
