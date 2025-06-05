@@ -76,7 +76,7 @@ def task_success_handler(sender=None, result=None, **kwargs):
     log.info(f"✅ Задача '{sender.name}' выполнена успешно")
 
     # Проверка результата от process_check
-    if sender.name == "app.tasks.process_check" and isinstance(result, dict):
+    if sender.name == "app.celery.tasks.process_check" and isinstance(result, dict):
         data = result.get("data")
         if data:
             success_check.delay(data)
@@ -89,5 +89,5 @@ def task_failure_handler(
 ):
     log.error(f"❌ Задача '{sender.name}' завершилась с ошибкой: {exception}")
 
-    if sender.name == "app.tasks.process_check" and args:
+    if sender.name == "app.celery.tasks.process_check" and args:
         failure_check.delay(args[0])
