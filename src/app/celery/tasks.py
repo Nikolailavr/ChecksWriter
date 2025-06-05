@@ -15,54 +15,37 @@ from celery.signals import task_success, task_failure
 logger = logging.getLogger(__name__)
 
 
-def run_async(func, *args, **kwargs):
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(func(*args, **kwargs))
-
-
 @celery_app.task
 def success_check(data: dict):
-    run_async(async_success_check, data)
-
-
-async def async_success_check(data: dict):
     from app.bot.main import send_msg
 
-    user_data = await redis_client.hgetall(f"receipt:{data.get("filename")}")
+    user_data = redis_client.hgetall(f"receipt:{data.get("filename")}")
     chat_id = int(user_data["telegram_id"])
     try:
-        await ReceiptService.save_receipt(
+        ReceiptService.save_receipt(
             data=data["result"],
             telegram_id=chat_id,
             category=user_data["category"],
         )
     except SQLAlchemyError as ex:
         logger.error(f"[ERROR] {ex}")
-        await send_msg(chat_id=chat_id, text="❌ Ошибка, чек уже внесен")
+        send_msg(chat_id=chat_id, text="❌ Ошибка, чек уже внесен")
     else:
-        await send_msg(chat_id=chat_id, text="✅ Данные чека успешно внесены!")
+        send_msg(chat_id=chat_id, text="✅ Данные чека успешно внесены!")
     finally:
-        await redis_client.delete(f"receipt:{data.get("filename")}")
+        redis_client.delete(f"receipt:{data.get("filename")}")
 
 
 @celery_app.task
 def failure_check(data: dict):
-    run_async(async_failure_check, data)
-
-
-async def async_failure_check(data: dict):
     from app.bot.main import send_msg
 
     try:
-        user_data = await redis_client.hgetall(f"receipt:{data.get("filename")}")
+        user_data = redis_client.hgetall(f"receipt:{data.get("filename")}")
         chat_id = int(user_data["telegram_id"])
-        await send_msg(chat_id=chat_id, text="❌ Ошибка, не удалось распознать!")
+        send_msg(chat_id=chat_id, text="❌ Ошибка, не удалось распознать!")
     finally:
-        await redis_client.delete(f"receipt:{data.get("filename")}")
+        redis_client.delete(f"receipt:{data.get("filename")}")
 
 
 @celery_app.task(bind=True)
