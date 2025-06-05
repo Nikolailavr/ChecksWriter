@@ -5,14 +5,12 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from app.bot.handlers import register_all_handlers
 from core import settings
-from core.decor import hybrid_async
 
 logger = logging.getLogger(__name__)
 
 bot = Bot(token=settings.telegram.token)
 dp = Dispatcher(storage=MemoryStorage())
 
-@hybrid_async
 async def send_msg(
     chat_id: int,
     text: str,

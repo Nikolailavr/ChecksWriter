@@ -1,12 +1,10 @@
 from core.database import db_helper
 from core.database.DAL import ReceiptRepository
 from core.database.schemas import ReceiptSchema
-from core.decor import hybrid_async
 
 
 class ReceiptService:
     @staticmethod
-    @hybrid_async
     async def save_receipt(data: dict, telegram_id: int, category: str):
         async with db_helper.get_session() as session:
             receipt_data = ReceiptSchema.model_validate(data)

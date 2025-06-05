@@ -21,3 +21,21 @@ def hybrid_async(func):
 
     # Возвращаем функцию, которая в async контексте возвращает coroutine, в sync — результат
     return sync_wrapper
+
+
+def run_async(coro):
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(coro)
+        finally:
+            loop.close()
+            asyncio.set_event_loop(None)
+    else:
+        # Если loop уже есть, запускаем синхронно
+        future = asyncio.run_coroutine_threadsafe(coro, loop)
+        return future.result()
+        
