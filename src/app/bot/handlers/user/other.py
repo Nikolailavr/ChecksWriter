@@ -6,7 +6,11 @@ from typing import Dict
 from aiogram import Router, F, Dispatcher, types
 from aiogram.types import CallbackQuery
 
-from app.bot.keyboards.user import show_categories, show_receipts
+from app.bot.keyboards.user import (
+    show_categories,
+    show_receipts,
+    build_receipt_action_keyboard,
+)
 from app.celery.tasks import process_check
 from app.parser.main import Parser
 
@@ -63,7 +67,10 @@ async def show_receipts_callback(callback: CallbackQuery):
         telegram_id=callback.from_user.id,
         category=category,
     )
-    await show_receipts(callback.message, receipts, category, page, edit=True)
+    if not receipts:
+        await callback.message.answer("Категории не найдены.")
+    else:
+        await show_receipts(callback.message, receipts, category, page, edit=True)
     await callback.answer()
 
 
@@ -76,6 +83,40 @@ async def paginate_receipts(callback: CallbackQuery):
         category=category,
     )
     await show_receipts(callback.message, receipts, category, page, edit=True)
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("receipt:"))
+async def receipt_action_menu(callback: CallbackQuery):
+    receipt_id = int(callback.data.split(":")[1])
+    keyboard = build_receipt_action_keyboard(receipt_id)
+    await callback.message.edit_text(
+        "Выберите действие для чека:", reply_markup=keyboard
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("view:"))
+async def show_receipt_items(callback: CallbackQuery):
+    receipt_id = int(callback.data.split(":")[1])
+    items = await ReceiptService.get_receipt(receipt_id)
+    if not items:
+        await callback.message.answer("Покупки не найдены.")
+    else:
+        lines = ["🧾 Покупки:"]
+        for item in items:
+            lines.append(
+                f"{item.name}\n{item.price / 100:.2f} ₽ × {item.quantity} = {item.sum / 100:.2f} ₽\n"
+            )
+        await callback.message.answer("\n".join(lines))
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("delete:"))
+async def delete_receipt(callback: CallbackQuery):
+    receipt_id = int(callback.data.split(":")[1])
+    await ReceiptService.delete_receipt(receipt_id)
+    await callback.message.edit_text("✅ Чек удалён.")
     await callback.answer()
 
 

@@ -97,3 +97,21 @@ async def show_receipts(
         await message.edit_text(f"Чеки в категории «{category}»", reply_markup=markup)
     else:
         await message.answer(f"Чеки в категории «{category}»:", reply_markup=markup)
+
+
+def build_receipt_action_keyboard(receipt_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="👁 Просмотр", callback_data=f"view:{receipt_id}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="❌ Удалить", callback_data=f"delete:{receipt_id}"
+                )
+            ],
+            [InlineKeyboardButton(text="🔙 Назад", callback_data=f"receipts:0")],
+        ]
+    )

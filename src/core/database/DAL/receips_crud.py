@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -106,3 +106,14 @@ class ReceiptRepository:
             return items
         except SQLAlchemyError as ex:
             raise ex
+
+    async def delete_receipt(self, receipt_id: int) -> bool | None:
+        try:
+            await self.session.execute(
+                delete(Receipt).where(Receipt.receipt_id == receipt_id)
+            )
+            await self.session.commit()
+            return True
+        except SQLAlchemyError as e:
+            await self.session.rollback()
+            raise e

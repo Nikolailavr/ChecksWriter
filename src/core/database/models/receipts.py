@@ -120,7 +120,7 @@ class ReceiptItem(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     receipt_id: Mapped[int] = mapped_column(
         Numeric(20, 0),
-        ForeignKey("receipts.receipt_id"),
+        ForeignKey("receipts.receipt_id", ondelete="CASCADE"),
         nullable=False,
     )
     unit: Mapped[Optional[str]] = mapped_column(String(10))

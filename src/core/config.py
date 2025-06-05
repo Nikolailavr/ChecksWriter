@@ -54,6 +54,7 @@ class Parser(BaseModel):
 
 
 class Uploader(BaseModel):
+    TEST: bool = True
     DIR: str = Path("/app/shared/uploads")
 
 
@@ -88,7 +89,10 @@ class Settings(BaseSettings):
 settings = Settings()
 
 # Создаем папку для изображений, если ее нет
-os.makedirs(settings.uploader.DIR, exist_ok=True)
+if not settings.uploader.TEST:
+    os.makedirs(settings.uploader.DIR, exist_ok=True)
+else:
+    os.makedirs(BASE_DIR / "uploader", exist_ok=True)
 
 # Logging
 logging.basicConfig(
