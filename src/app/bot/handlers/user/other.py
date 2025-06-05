@@ -116,11 +116,9 @@ async def delete_receipt(callback: CallbackQuery):
 
 @router.message(F.text)
 async def handle_category(msg: types.Message):
-    await msg.answer("🗳 Обработываю данные...")
-
     if msg.from_user.id not in user_states:
         return
-
+    await msg.answer("🗳 Обработываю данные...")
     filename = user_states.pop(msg.from_user.id)
     category_name = msg.text.strip()
 

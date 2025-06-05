@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 @celery_app.task
-def success_check(self, data: dict):
+def success_check(data: dict):
     asyncio.run(async_success_check(data))
 
 
@@ -33,7 +33,7 @@ async def async_success_check(data: dict):
 
 
 @celery_app.task
-def failure_check(self, data: dict):
+def failure_check(data: dict):
     asyncio.run(async_failure_check(data))
 
 
