@@ -53,9 +53,11 @@ async def handle_photo(msg: types.Message):
 async def paginate_categories(callback: CallbackQuery):
     page = int(callback.data.split(":")[1])
     categories = await ReceiptService.get_categories(callback.from_user.id)
-
+    if not categories:
+        await callback.message.answer("Категории не найдены.")
+    else:
     # Редактируем сообщение, выводим нужную страницу категорий
-    await show_categories(callback.message, categories, page, edit=True)
+        await show_categories(callback.message, categories, page, edit=True)
     await callback.answer()
 
 
@@ -67,10 +69,7 @@ async def show_receipts_callback(callback: CallbackQuery):
         telegram_id=callback.from_user.id,
         category=category,
     )
-    if not receipts:
-        await callback.message.answer("Категории не найдены.")
-    else:
-        await show_receipts(callback.message, receipts, category, page, edit=True)
+    await show_receipts(callback.message, receipts, category, page, edit=True)
     await callback.answer()
 
 
