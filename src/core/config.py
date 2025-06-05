@@ -94,13 +94,6 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Redis
-redis_client = redis.Redis(
-    host=settings.redis.HOST,
-    port=settings.redis.PORT,
-    decode_responses=True,  # чтобы не приходилось вручную декодировать строки
-)
-
 # Logging
 logging.basicConfig(
     level=settings.logging.log_level_value,

@@ -15,7 +15,7 @@ from app.celery.tasks import process_check
 from app.parser.main import Parser
 
 from core import settings
-from core.config import redis_client
+from core.redis import redis_client
 from core.services.receipts import ReceiptService
 
 logger = logging.getLogger(__name__)

@@ -8,7 +8,7 @@ from app.parser.exceptions import BadQRCodeError
 from app.parser.main import Parser
 from app.celery.celery_app import celery_app
 from core import settings
-from core.config import redis_client
+from core.redis import redis_client
 from core.services.receipts import ReceiptService
 from celery.signals import task_success, task_failure
 
