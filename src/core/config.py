@@ -54,7 +54,7 @@ class Parser(BaseModel):
 
 
 class Uploader(BaseModel):
-    DIR: str
+    DIR: str = Path("/app/shared/uploads")
 
 
 class Schedule(BaseModel):
@@ -80,7 +80,7 @@ class Settings(BaseSettings):
     db: DatabaseConfig
     telegram: Telegram
     parser: Parser = Parser()
-    uploader: Uploader
+    uploader: Uploader = Uploader()
     schedule: Schedule
     celery: Celery
 
