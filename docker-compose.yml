@@ -54,7 +54,7 @@ services:
     build:
       context: ./
       dockerfile: ./docker-build/app/Dockerfile
-    command: celery -A app.celery.celery_app worker --pool eventlet  --loglevel=info
+    command: celery -A app.celery.celery_app worker --pool=threads --loglevel=info
     volumes:
       - .:/app
       - shared-data:/app/shared
