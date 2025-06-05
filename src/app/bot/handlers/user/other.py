@@ -15,7 +15,6 @@ from app.celery.tasks import process_check
 from app.parser.main import Parser
 
 from core import settings
-from core.services.images import ImageService
 from core.services.receipts import ReceiptService
 
 logger = logging.getLogger(__name__)
@@ -39,11 +38,6 @@ async def handle_photo(msg: types.Message):
     logger.info(f"Сохраняем файл: {filepath}")
     await msg.bot.download_file(file.file_path, filepath)
 
-    await ImageService.get_or_create(
-        telegram_id=msg.from_user.id,
-        filename=filename,
-    )
-
     # Запоминаем файл и просим категорию
     user_states[msg.from_user.id] = filename
     await msg.answer("Введите название категории для этого чека:")
@@ -53,7 +47,7 @@ async def handle_photo(msg: types.Message):
 async def paginate_categories(callback: CallbackQuery):
     page = int(callback.data.split(":")[1])
     categories = await ReceiptService.get_categories(callback.from_user.id)
-    if not categories:
+    if len(categories) == 0:
         await callback.message.answer("Категории не найдены.")
     else:
         # Редактируем сообщение, выводим нужную страницу категорий
@@ -129,11 +123,6 @@ async def handle_category(msg: types.Message):
     filename = user_states.pop(msg.from_user.id)
     category_name = msg.text.strip()
 
-    await ImageService.update(
-        filename=filename,
-        category=category_name,
-    )
-
     user_msg = {
         "chat_id": msg.chat.id,
         "filename": filename,
@@ -158,7 +147,6 @@ async def handle_category(msg: types.Message):
     #     await msg.answer("❌ Ошибка, не удалось распознать")
     # finally:
     #     os.remove(settings.uploader.DIR / filename)
-    #     await ImageService.delete(filename=filename)
 
 
 def register_users_other_handlers(dp: Dispatcher) -> None:

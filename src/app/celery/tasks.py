@@ -6,7 +6,6 @@ from app.parser.exceptions import BadQRCodeError
 from app.parser.main import Parser
 from app.celery.celery_app import celery_app
 from core import settings
-from core.services.images import ImageService
 from core.services.receipts import ReceiptService
 from celery.signals import task_success, task_failure
 
@@ -52,7 +51,6 @@ async def remove_file(data: dict):
         os.remove(os.path.abspath(settings.uploader.DIR / data["filename"]))
     except FileNotFoundError as ex:
         log.error(f"[ERROR] File not found {settings.uploader.DIR / data["filename"]}")
-    await ImageService.delete(filename=data["filename"])
 
 
 @celery_app.task(bind=True)
