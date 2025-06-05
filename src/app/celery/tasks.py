@@ -43,9 +43,7 @@ def success_check(data: dict):
     except SQLAlchemyError as ex:
         logger.error(f"[ERROR] {ex}")
         logger.info("Отправка сообщения: ❌ Ошибка, чек уже внесен")
-        cel_helper.run(
-            send_msg(chat_id=telegram_id, text="❌ Ошибка, чек уже внесен")
-        )
+        cel_helper.run(send_msg(chat_id=telegram_id, text="❌ Ошибка, чек уже внесен"))
     else:
         logger.info("Отправка сообщения: ✅ Данные чека успешно внесены!")
         cel_helper.run(
