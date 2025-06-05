@@ -9,9 +9,8 @@ class HybridRedisClient:
 
     def __getattr__(self, name):
         attr = getattr(self.async_client, name)
-        
-        if asyncio.iscoroutinefunction(attr):
-            # Оборачиваем async функцию
+
+        if inspect.iscoroutinefunction(attr):
             def sync_method(*args, **kwargs):
                 try:
                     loop = asyncio.get_running_loop()
@@ -25,8 +24,21 @@ class HybridRedisClient:
                     return attr(*args, **kwargs)
 
             return sync_method
+
+        # На случай, если attr сам coroutine, а не coroutine function
+        elif inspect.iscoroutine(attr):
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                result = loop.run_until_complete(attr)
+                loop.close()
+                return result
+            else:
+                return attr
+
         else:
-            # Просто возвращаем атрибут (например, свойства)
             return attr
 
 
