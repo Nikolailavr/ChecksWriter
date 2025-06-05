@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @celery_app.task
 def success_check(data: dict):
     from app.bot.main import send_msg
+
     filename = data.get("filename")
     try:
         logger.info(f"Забираем данные из redis для файла: {filename}")
@@ -26,7 +27,7 @@ def success_check(data: dict):
             logger.warning(f"Данные для receipt:{filename} не найдены в Redis.")
             return
 
-        chat_id_str = user_data.get("telegram_id") # Безопасное извлечение
+        chat_id_str = user_data.get("telegram_id")  # Безопасное извлечение
         if chat_id_str:
             chat_id = int(chat_id_str)
         logger.info("Сохраняем в Postgres")
@@ -45,9 +46,11 @@ def success_check(data: dict):
     finally:
         redis_client.delete(f"receipt:{filename}")
 
+
 @celery_app.task
 def failure_check(filename: str):
     from app.bot.main import send_msg
+
     chat_id = None
     try:
         logger.info(f"Забираем данные из redis для файла: {filename}")
@@ -58,8 +61,13 @@ def failure_check(filename: str):
         chat_id_str = user_data.get("telegram_id")
         if chat_id_str:
             chat_id = int(chat_id_str)
-            logger.info(f"Отправка сообщения для chat_id {chat_id}: ❌ Ошибка, не удалось распознать {filename}!")
-            send_msg(chat_id=chat_id, text=f"❌ Ошибка, не удалось распознать файл '{filename}'!")
+            logger.info(
+                f"Отправка сообщения для chat_id {chat_id}: ❌ Ошибка, не удалось распознать {filename}!"
+            )
+            send_msg(
+                chat_id=chat_id,
+                text=f"❌ Ошибка, не удалось распознать файл '{filename}'!",
+            )
         else:
             logger.warning(f"telegram_id не найден в user_data для receipt:{filename}")
 
@@ -67,9 +75,14 @@ def failure_check(filename: str):
         logger.error(f"Произошла ошибка в failure_check для {filename}: {e}")
         if chat_id:
             try:
-                send_msg(chat_id=chat_id, text=f"❌ Произошла внутренняя ошибка при обработке неудачи для файла.")
+                send_msg(
+                    chat_id=chat_id,
+                    text=f"❌ Произошла внутренняя ошибка при обработке неудачи для файла.",
+                )
             except Exception as send_ex:
-                logger.error(f"Не удалось отправить сообщение об ошибке в failure_check: {send_ex}")
+                logger.error(
+                    f"Не удалось отправить сообщение об ошибке в failure_check: {send_ex}"
+                )
     finally:
         logger.info(f"Удаляем ключ receipt:{filename} из Redis.")
         redis_client.delete(f"receipt:{filename}")
@@ -91,7 +104,9 @@ def process_check(self, filename: str):
         logger.warning(f"Не удалось распознать QR-код для {filename}: {e}")
         raise
     except Exception as e:
-        logger.error(f"Общая ошибка при обработке {filename}: {e}, попытка {self.request.retries + 1} из {self.max_retries}")
+        logger.error(
+            f"Общая ошибка при обработке {filename}: {e}, попытка {self.request.retries + 1} из {self.max_retries}"
+        )
         self.retry(exc=e, countdown=5, max_retries=2)
     finally:
         remove_file(filename)

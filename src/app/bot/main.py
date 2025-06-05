@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 bot = Bot(token=settings.telegram.token)
 dp = Dispatcher(storage=MemoryStorage())
 
+
 def send_msg(
     chat_id: int,
     text: str,
