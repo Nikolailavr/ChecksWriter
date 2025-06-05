@@ -15,15 +15,13 @@ from app.celery.tasks import process_check
 from app.parser.main import Parser
 
 from core import settings
+from core.config import redis_client
 from core.services.receipts import ReceiptService
 
 logger = logging.getLogger(__name__)
 router = Router()
 
 IMAGE_FOLDER = settings.uploader.DIR
-
-# Временное хранилище для ожидания категорий
-user_states: Dict[int, str] = {}
 
 
 @router.message(F.photo)
@@ -38,8 +36,13 @@ async def handle_photo(msg: types.Message):
     logger.info(f"Сохраняем файл: {filepath}")
     await msg.bot.download_file(file.file_path, filepath)
 
-    # Запоминаем файл и просим категорию
-    user_states[msg.from_user.id] = filename
+    # Сохраняем базовую информацию в Redis
+    redis_key = f"receipt:{filename}"
+    await redis_client.hset(redis_key, mapping={
+        "telegram_id": msg.from_user.id,
+        "chat_id": msg.chat.id,
+    })
+    await redis_client.expire(redis_key, 600)  # TTL 10 минут
     await msg.answer("Введите название категории для этого чека:")
 
 
@@ -112,20 +115,27 @@ async def delete_receipt(callback: CallbackQuery):
 
 @router.message(F.text)
 async def handle_category(msg: types.Message):
-    if msg.from_user.id not in user_states:
-        return
-    await msg.answer("🗳 Обработываю данные...")
-    filename = user_states.pop(msg.from_user.id)
-    category_name = msg.text.strip()
+    keys = await redis_client.keys("receipt:*")
+    target_key = None
 
-    user_data = {
-        "chat_id": msg.chat.id,
-        "filename": filename,
-        "telegram_id": msg.from_user.id,
-        "category": category_name,
-    }
+    for key in keys:
+        telegram_id = await redis_client.hget(key, "telegram_id")
+        if str(telegram_id) == str(msg.from_user.id):
+            target_key = key
+            break
+
+    if not target_key:
+        await msg.answer("Чек не найден, начните с загрузки фото.")
+        return
+
+    category = msg.text.strip()
+    await redis_client.hset(target_key, "category", category)
+
+    await msg.answer("🗳 Обработываю данные...")
+
     # Запускаем задачу Celery
-    task = process_check.delay(user_data)
+    filename = await redis_client.hget(target_key, "filename")
+    task = process_check.delay(filename)
     logger.info(f"Изображение сохранено. Обработка начата (ID задачи: {task.id})")
 
     # parser = Parser()

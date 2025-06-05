@@ -8,6 +8,7 @@ from app.parser.exceptions import BadQRCodeError
 from app.parser.main import Parser
 from app.celery.celery_app import celery_app
 from core import settings
+from core.config import redis_client
 from core.services.receipts import ReceiptService
 from celery.signals import task_success, task_failure
 
@@ -21,18 +22,19 @@ def success_check(data: dict):
 
 async def async_success_check(data: dict):
     from app.bot.main import send_msg
-
+    user_data = await redis_client.hgetall(f"receipt:{data.get("filename")}")
+    chat_id = int(user_data["chat_id"])
     try:
         await ReceiptService.save_receipt(
             data=data["result"],
-            telegram_id=data["telegram_id"],
-            category=data["category"],
+            telegram_id=user_data["telegram_id"],
+            category=user_data["category"],
         )
     except SQLAlchemyError as ex:
         log.error(f"[ERROR] {ex}")
-        await send_msg(chat_id=data["chat_id"], text="❌ Ошибка, чек уже внесен")
+        await send_msg(chat_id=chat_id, text="❌ Ошибка, чек уже внесен")
     else:
-        await send_msg(chat_id=data["chat_id"], text="✅ Данные чека успешно внесены!")
+        await send_msg(chat_id=chat_id, text="✅ Данные чека успешно внесены!")
 
 
 @celery_app.task
@@ -42,20 +44,20 @@ def failure_check(data: dict):
 
 async def async_failure_check(data: dict):
     from app.bot.main import send_msg
-
-    await send_msg(chat_id=data["chat_id"], text="❌ Ошибка, не удалось распознать!")
+    user_data = await redis_client.hgetall(f"receipt:{data.get("filename")}")
+    chat_id = int(user_data["chat_id"])
+    await send_msg(chat_id=chat_id, text="❌ Ошибка, не удалось распознать!")
 
 
 @celery_app.task(bind=True)
-def process_check(self, data: dict):
+def process_check(self, filename: str):
     """Задача Celery для обработки чека"""
     try:
         parser = Parser()
-        result = parser.check(data["filename"])
+        result = parser.check(filename)
         if not isinstance(result, dict):
             raise ValueError("Parser должен возвращать словарь")
-        data["result"] = result
-        return {"status": "success", "data": data}
+        return {"status": "success", "result": result, "filename": filename}
     except FileExistsError:
         ...
     except BadQRCodeError:
@@ -63,14 +65,14 @@ def process_check(self, data: dict):
     except Exception as e:
         self.retry(exc=e, countdown=5, max_retries=2)
     finally:
-        remove_file(data)
+        remove_file(filename)
 
 
-def remove_file(data: dict):
+def remove_file(filename: str):
     try:
-        os.remove(os.path.abspath(settings.uploader.DIR / data["filename"]))
+        os.remove(os.path.abspath(settings.uploader.DIR /filename))
     except FileNotFoundError as ex:
-        log.error(f"[ERROR] File not found {settings.uploader.DIR / data["filename"]}")
+        log.error(f"[ERROR] File not found {settings.uploader.DIR / filename}")
 
 
 # Успешное выполнение задачи
@@ -80,9 +82,10 @@ def task_success_handler(sender=None, result=None, **kwargs):
 
     # Проверка результата от process_check
     if sender.name == "app.celery.tasks.process_check" and isinstance(result, dict):
-        data = result.get("data")
-        if data:
-            success_check.delay(data=data)
+        parsed = result.get("result")
+        filename = result.get("filename")
+        if parsed and filename:
+            success_check.delay(data={"result": parsed, "filename": filename})
 
 
 # Ошибка при выполнении задачи
