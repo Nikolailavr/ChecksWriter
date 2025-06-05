@@ -9,7 +9,6 @@ from app.parser.main import Parser
 from app.celery.celery_app import celery_app
 from core import settings
 from core.redis import redis_client
-from core.decor import run_async
 from core.services.receipts import ReceiptService
 from celery.signals import task_success, task_failure
 
@@ -17,11 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @celery_app.task
-def success_check(data: dict):
-    asyncio.run(async_success_check(data))
-
-
-async def async_success_check(data: dict):
+async def success_check(data: dict):
     from app.bot.main import send_msg
     logger.info("Забираем данные из redis")
     user_data = await redis_client.hgetall(f"receipt:{data.get("filename")}")
@@ -44,12 +39,8 @@ async def async_success_check(data: dict):
         await redis_client.delete(f"receipt:{data.get("filename")}")
 
 @celery_app.task
-def failure_check(filename: str):
-    asyncio.run(async_failure_check(data))
-
-async def async_failure_check(filename: str):
+async def failure_check(filename: str):
     from app.bot.main import send_msg
-
     try:
         logger.info("Забираем данные из redis")
         user_data = await redis_client.hgetall(f"receipt:{filename}")
