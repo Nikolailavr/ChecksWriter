@@ -15,9 +15,18 @@ from celery.signals import task_success, task_failure
 logger = logging.getLogger(__name__)
 
 
+def run_async(func, *args, **kwargs):
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop.run_until_complete(func(*args, **kwargs))
+
+
 @celery_app.task
 def success_check(data: dict):
-    asyncio.run(async_success_check(data))
+    run_async(async_success_check, data)
 
 
 async def async_success_check(data: dict):
@@ -42,7 +51,7 @@ async def async_success_check(data: dict):
 
 @celery_app.task
 def failure_check(data: dict):
-    asyncio.run(async_failure_check(data))
+    run_async(async_failure_check, data)
 
 
 async def async_failure_check(data: dict):
