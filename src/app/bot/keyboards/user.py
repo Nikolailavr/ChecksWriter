@@ -69,7 +69,7 @@ async def show_receipts(
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    text=date_str, callback_data=f"r:{receipt.receipt_id}"
+                    text=date_str, callback_data=f"receipt:{receipt.receipt_id}"
                 )
             ]
         )

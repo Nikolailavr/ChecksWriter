@@ -120,24 +120,6 @@ async def delete_receipt(callback: CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(F.data.startswith("r:"))
-async def show_receipt_items(callback: CallbackQuery):
-    receipt_id = int(callback.data.split(":")[1])
-    items = await ReceiptService.get_receipt(receipt_id)
-    if not items:
-        await callback.message.answer("Покупки не найдены.")
-        await callback.answer()
-        return
-    lines = ["🧾 Покупки:"]
-    for item in items:
-        lines.append(
-            f"{item.name}\n{item.price / 100:.2f} ₽ × {item.quantity} = {item.sum / 100:.2f} ₽\n"
-        )
-
-    await callback.message.answer("\n".join(lines))
-    await callback.answer()
-
-
 @router.message(F.text)
 async def handle_category(msg: types.Message):
     await msg.answer("🗳 Обработываю данные...")
