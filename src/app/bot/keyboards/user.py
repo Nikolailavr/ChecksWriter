@@ -70,11 +70,7 @@ async def show_receipts(
         callback_data = f"receipt:{str(receipt.receipt_id)}"
         logger.info(f"{callback_data=}")
         keyboard.append(
-            [
-                InlineKeyboardButton(
-                    text=date_str, callback_data=callback_data
-                )
-            ]
+            [InlineKeyboardButton(text=date_str, callback_data=callback_data)]
         )
 
     # Пагинация
