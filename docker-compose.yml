@@ -9,7 +9,7 @@ services:
     environment:
       APP_CONFIG__DB__ECHO: 0
     ports:
-      - "8000:8000"
+      - "8002:8000"
     depends_on:
       pg:
         condition: service_healthy
