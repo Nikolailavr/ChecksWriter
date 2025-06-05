@@ -13,11 +13,11 @@ bot = Bot(token=settings.telegram.token)
 dp = Dispatcher(storage=MemoryStorage())
 
 
-def send_msg(
+async def send_msg(
     chat_id: int,
     text: str,
 ):
-    asyncio.run(bot.send_message(chat_id=chat_id, text=text))
+    await bot.send_message(chat_id=chat_id, text=text)
 
 
 async def start_bot():

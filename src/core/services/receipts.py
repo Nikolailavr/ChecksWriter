@@ -37,7 +37,3 @@ class ReceiptService:
     async def delete_receipt(receipt_id: int):
         async with db_helper.get_session() as session:
             return await ReceiptRepository(session).delete_receipt(receipt_id)
-
-    @staticmethod
-    def sync_save_receipt(data: dict, telegram_id: int, category: str):
-        asyncio.run(ReceiptService.save_receipt(data, telegram_id, category))
