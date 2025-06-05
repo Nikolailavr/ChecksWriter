@@ -56,7 +56,7 @@ async def paginate_categories(callback: CallbackQuery):
     if not categories:
         await callback.message.answer("Категории не найдены.")
     else:
-    # Редактируем сообщение, выводим нужную страницу категорий
+        # Редактируем сообщение, выводим нужную страницу категорий
         await show_categories(callback.message, categories, page, edit=True)
     await callback.answer()
 
