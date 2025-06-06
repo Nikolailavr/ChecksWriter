@@ -115,7 +115,7 @@ class ReceiptRepository:
                 .where(Receipt.receipt_id == receipt_id)
             )
             result = await self.session.execute(stmt)
-            return result.scalars().one_or_none()
+            return result.unique().scalar_one_or_none()
         except SQLAlchemyError as ex:
             raise ex
 
