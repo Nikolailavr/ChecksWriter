@@ -133,7 +133,7 @@ class ReceiptRepository:
     async def update_category(self, receipt_id: str, new_category: str):
         stmt = (
             update(Receipt)
-            .where(Receipt.id == receipt_id)
+            .where(Receipt.receipt_id == receipt_id)
             .values(category=new_category)
         )
         await self.session.execute(stmt)
