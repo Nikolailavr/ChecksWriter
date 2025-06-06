@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -117,3 +117,12 @@ class ReceiptRepository:
         except SQLAlchemyError as e:
             await self.session.rollback()
             raise e
+
+    async def update_category(self, receipt_id: int, new_category: str):
+        stmt = (
+            update(Receipt)
+            .where(Receipt.id == receipt_id)
+            .values(category=new_category)
+        )
+        await self.session.execute(stmt)
+        await self.session.commit()

@@ -113,13 +113,24 @@ def build_receipt_action_keyboard(receipt_id: int) -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(
-                    text="✏ Изменить категорию", callback_data=f"change_cat:{receipt_id}"
+                    text="✏ Изменить категорию",
+                    callback_data=f"change_cat:{receipt_id}",
                 )
             ],
-            [
-                InlineKeyboardButton(
-                    text="🔙 Назад", callback_data="cats:0"
-                )
-            ],
+            [InlineKeyboardButton(text="🔙 Назад", callback_data="cats:0")],
         ]
     )
+
+
+# --- Кнопки выбора категории ---
+def build_category_keyboard(
+    receipt_id: int, categories: list[str]
+) -> InlineKeyboardMarkup:
+    keyboard = [
+        [InlineKeyboardButton(text=cat, callback_data=f"set_cat:{receipt_id}:{cat}")]
+        for cat in categories
+    ]
+    keyboard.append(
+        [InlineKeyboardButton(text="🔙 Назад", callback_data=f"view:{receipt_id}")]
+    )
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

@@ -37,3 +37,8 @@ class ReceiptService:
     async def delete_receipt(receipt_id: int):
         async with db_helper.get_session() as session:
             return await ReceiptRepository(session).delete_receipt(receipt_id)
+
+    @staticmethod
+    async def update_category(receipt_id: int, new_category: str):
+        async with db_helper.get_session() as session:
+            await ReceiptRepository(session).update_category(receipt_id, new_category)

@@ -1,18 +1,19 @@
 import logging
 import os
 import uuid
-from typing import Dict
 
 from aiogram import Router, F, Dispatcher, types
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State
 from aiogram.types import CallbackQuery
 
 from app.bot.keyboards.user import (
     show_categories,
     show_receipts,
     build_receipt_action_keyboard,
+    build_category_keyboard,
 )
 from app.celery.tasks import process_check
-from app.parser.main import Parser
 
 from core import settings
 from core.redis import async_redis_client
@@ -22,6 +23,10 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 IMAGE_FOLDER = settings.uploader.DIR
+
+
+class ChangeCategoryState:
+    choosing = State()
 
 
 @router.message(F.photo)
@@ -108,6 +113,42 @@ async def show_receipt_items(callback: CallbackQuery):
             )
         await callback.message.answer("\n".join(lines))
     await callback.answer()
+
+
+# --- Обработчик кнопки "Изменить категорию" ---
+@router.callback_query(F.data.startswith("change_cat:"))
+async def handle_change_category(callback: CallbackQuery, state: FSMContext):
+    receipt_id = int(callback.data.split(":")[1])
+    telegram_id = callback.from_user.id
+
+    categories = await ReceiptService.get_categories(telegram_id)
+    if not categories:
+        await callback.message.answer("❌ У вас ещё нет категорий.")
+        return
+
+    await state.set_state(ChangeCategoryState.choosing)
+    await state.update_data(receipt_id=receipt_id)
+
+    await callback.message.edit_text(
+        "🔽 Выберите новую категорию:",
+        reply_markup=build_category_keyboard(receipt_id, categories),
+    )
+
+
+# --- Обработчик установки новой категории ---
+@router.callback_query(F.data.startswith("set_cat:"))
+async def handle_set_category(callback: CallbackQuery, state: FSMContext):
+    parts = callback.data.split(":")
+    receipt_id = int(parts[1])
+    new_category = parts[2]
+
+    # Обновление категории (нужен соответствующий метод в ReceiptService)
+    await ReceiptService.update_category(receipt_id, new_category)
+
+    await state.clear()
+    await callback.message.edit_text(
+        f"✅ Категория обновлена на <b>{new_category}</b>."
+    )
 
 
 @router.callback_query(F.data.startswith("delete:"))
