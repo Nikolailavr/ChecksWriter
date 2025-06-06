@@ -103,14 +103,23 @@ def build_receipt_action_keyboard(receipt_id: int) -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="👁 Просмотр", callback_data=f"view:{str(receipt_id)}"
+                    text="👁 Просмотр", callback_data=f"view:{receipt_id}"
                 )
             ],
             [
                 InlineKeyboardButton(
-                    text="❌ Удалить", callback_data=f"delete:{str(receipt_id)}"
+                    text="❌ Удалить", callback_data=f"delete:{receipt_id}"
                 )
             ],
-            [InlineKeyboardButton(text="🔙 Назад", callback_data=f"cats:0")],
+            [
+                InlineKeyboardButton(
+                    text="✏ Изменить категорию", callback_data=f"change_cat:{receipt_id}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔙 Назад", callback_data="cats:0"
+                )
+            ],
         ]
     )
