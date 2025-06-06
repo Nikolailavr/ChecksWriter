@@ -1,7 +1,9 @@
 import asyncio
+from typing import Sequence
 
 from core.database import db_helper
 from core.database.DAL import ReceiptRepository
+from core.database.models import Receipt, ReceiptItem
 from core.database.schemas import ReceiptSchema
 
 
@@ -16,22 +18,22 @@ class ReceiptService:
             return receipt
 
     @staticmethod
-    async def get_categories(telegram_id: int):
+    async def get_categories(telegram_id: int) -> list[Receipt]:
         async with db_helper.get_session() as session:
             categories = await ReceiptRepository(session).get(telegram_id)
             return categories
 
     @staticmethod
-    async def get_receipts(telegram_id: int, category: str):
+    async def get_receipts(telegram_id: int, category: str) -> list[Receipt]:
         async with db_helper.get_session() as session:
             receipts = await ReceiptRepository(session).get(telegram_id, category)
             return receipts
 
     @staticmethod
-    async def get_receipt(receipt_id: str):
+    async def get_receipt(receipt_id: str) -> Receipt:
         async with db_helper.get_session() as session:
-            receipts = await ReceiptRepository(session).get_receipt(receipt_id)
-            return receipts
+            receipt = await ReceiptRepository(session).get_receipt(receipt_id)
+            return receipt
 
     @staticmethod
     async def delete_receipt(receipt_id: str):

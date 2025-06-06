@@ -35,8 +35,9 @@ async def receipt_action_menu(callback: CallbackQuery):
 @router.callback_query(F.data.startswith("view:"))
 async def show_receipt_items(callback: CallbackQuery):
     receipt_id = callback.data.split(":")[1]
+    # receipt_item = await ReceiptService.get_receipt(receipt_id)
     receipt = await ReceiptService.get_receipt(receipt_id)
-
+    logger.info(f"{receipt=}")
     if not receipt or not receipt.items:
         await callback.message.answer("Покупки не найдены.")
         await callback.answer()
@@ -46,8 +47,8 @@ async def show_receipt_items(callback: CallbackQuery):
     header_lines = []
     if receipt.retail_place:
         header_lines.append(f"🏪 {receipt.retail_place}")
-    if receipt.retail_place_address:
-        header_lines.append(f"📍 {receipt.retail_place_address}")
+    if receipt.address:
+        header_lines.append(f"📍 {receipt.address}")
     header_lines.append("🧾 Покупки:")
 
     # Список товаров

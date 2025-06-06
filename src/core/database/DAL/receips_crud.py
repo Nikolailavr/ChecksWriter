@@ -97,12 +97,20 @@ class ReceiptRepository:
         except SQLAlchemyError as ex:
             raise ex
 
-    async def get_receipt(self, receipt_id: str) -> Sequence[ReceiptItem]:
+    async def get_receipt_items(self, receipt_id: str) -> Sequence[ReceiptItem]:
         try:
             stmt = select(ReceiptItem).where(ReceiptItem.receipt_id == receipt_id)
             result = await self.session.execute(stmt)
             items = result.scalars().all()
             return items
+        except SQLAlchemyError as ex:
+            raise ex
+
+    async def get_receipt(self, receipt_id: str) -> Receipt:
+        try:
+            stmt = select(Receipt).where(ReceiptItem.receipt_id == receipt_id)
+            result = await self.session.execute(stmt)
+            return result.scalars().one_or_none()
         except SQLAlchemyError as ex:
             raise ex
 
