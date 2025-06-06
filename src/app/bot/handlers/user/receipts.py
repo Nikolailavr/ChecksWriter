@@ -46,9 +46,9 @@ async def show_receipt_items(callback: CallbackQuery):
     # Заголовок с местом покупки
     header_lines = []
     if receipt.retail_place:
-        header_lines.append(f"🏪 {receipt.retail_place}")
+        header_lines.append(f"🏪 {receipt.retail_place}\n")
     if receipt.address:
-        header_lines.append(f"📍 {receipt.address}")
+        header_lines.append(f"📍 {receipt.address}\n")
     header_lines.append("🧾 Покупки:")
 
     # Список товаров
