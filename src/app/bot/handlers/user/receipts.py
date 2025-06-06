@@ -40,16 +40,16 @@ async def show_receipt_items(callback: CallbackQuery):
     if not receipt:
         await callback.message.answer("Покупки не найдены.")
         return
-
+    address = receipt.address.replace(",,",",")
     lines = [
-        f"🏪 {receipt.retail_place or 'Без названия'}\n📍 {receipt.address or 'Адрес не указан'}\n",
+        f"🏪 {receipt.retail_place or 'Без названия'}\n📍 {address or 'Адрес не указан'}\n",
         "🧾 Покупки:",
     ]
     for item in receipt.items:
         lines.append(
             f"{item.name}\n{item.price / 100:.2f} ₽ × {item.quantity} = {item.sum / 100:.2f} ₽"
         )
-    lines.append(f"Итого: {receipt.total_sum / 100:.2f} ₽")
+    lines.append(f"\nИтого: {receipt.total_sum / 100:.2f} ₽")
     await callback.message.answer("\n".join(lines))
     await callback.answer()
 
