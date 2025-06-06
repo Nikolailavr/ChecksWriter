@@ -55,7 +55,6 @@ class ReceiptRepository:
             receipt.items = []
             for pos, item in enumerate(receipt_schema.items, 1):
                 receipt_item = ReceiptItem(
-                    unit=item.unit,
                     name=item.name,
                     price=item.price,
                     quantity=item.quantity,

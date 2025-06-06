@@ -35,7 +35,7 @@ class Receipt(Base):
         autoincrement=True,
     )
     receipt_id: Mapped[int] = mapped_column(
-        Numeric(20, 0),
+        String(20),
         unique=True,
         nullable=False,
         index=True,
@@ -87,11 +87,11 @@ class Receipt(Base):
     )
     buyer: Mapped[Optional[str]] = mapped_column(Text)
     user: Mapped[str] = mapped_column(String)
-    cash_total_sum: Mapped[int] = mapped_column(Integer, default=0)
-    ecash_total_sum: Mapped[int] = mapped_column(Integer, default=0)
-    prepaid_sum: Mapped[int] = mapped_column(Integer, default=0)
-    credit_sum: Mapped[int] = mapped_column(Integer, default=0)
-    provision_sum: Mapped[int] = mapped_column(Integer, default=0)
+    cash_total_sum: Mapped[int] = mapped_column(BigInteger, default=0)
+    ecash_total_sum: Mapped[int] = mapped_column(BigInteger, default=0)
+    prepaid_sum: Mapped[int] = mapped_column(BigInteger, default=0)
+    credit_sum: Mapped[int] = mapped_column(BigInteger, default=0)
+    provision_sum: Mapped[int] = mapped_column(BigInteger, default=0)
     nds_no: Mapped[Optional[int]] = mapped_column(Integer)
     applied_taxation_type: Mapped[Optional[int]] = mapped_column(Integer)
     operator: Mapped[Optional[str]] = mapped_column(Text)
@@ -119,15 +119,14 @@ class Receipt(Base):
 class ReceiptItem(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     receipt_id: Mapped[int] = mapped_column(
-        Numeric(20, 0),
+        String(20),
         ForeignKey("receipts.receipt_id", ondelete="CASCADE"),
         nullable=False,
     )
-    unit: Mapped[Optional[str]] = mapped_column(String(10))
     name: Mapped[str] = mapped_column(Text, nullable=False)
-    price: Mapped[int] = mapped_column(Integer, nullable=False)
+    price: Mapped[int] = mapped_column(BigInteger, nullable=False)
     quantity: Mapped[float] = mapped_column(Numeric(10, 3), nullable=False)
-    sum: Mapped[int] = mapped_column(Integer, nullable=False)
+    sum: Mapped[int] = mapped_column(BigInteger, nullable=False)
     nds: Mapped[Optional[int]] = mapped_column(Integer)
     product_type: Mapped[Optional[int]] = mapped_column(Integer)
     payment_type: Mapped[Optional[int]] = mapped_column(Integer)

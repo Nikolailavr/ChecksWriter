@@ -7,7 +7,6 @@ class ReceiptItemSchema(BaseModel):
     nds: Optional[int]
     sum: int
     name: str
-    unit: Optional[str] = Field(None, alias="unit")
     price: int
     quantity: float
     payment_type: Optional[int] = Field(None, alias="paymentType")
@@ -15,7 +14,7 @@ class ReceiptItemSchema(BaseModel):
 
 
 class MetadataSchema(BaseModel):
-    id: Optional[int] = None
+    id: Optional[str] = None
     ofd_id: Optional[str] = Field(None, alias="ofdId")
     address: Optional[str] = None
     subtype: Optional[str] = None
