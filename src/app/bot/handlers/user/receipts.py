@@ -38,27 +38,17 @@ async def show_receipt_items(callback: CallbackQuery):
     # receipt_item = await ReceiptService.get_receipt(receipt_id)
     receipt = await ReceiptService.get_receipt(receipt_id)
     logger.info(f"{receipt=}")
-    if not receipt or not receipt.items:
+    if not receipt:
         await callback.message.answer("Покупки не найдены.")
-        await callback.answer()
         return
 
-    # Заголовок с местом покупки
-    header_lines = []
-    if receipt.retail_place:
-        header_lines.append(f"🏪 {receipt.retail_place}\n")
-    if receipt.address:
-        header_lines.append(f"📍 {receipt.address}\n")
-    header_lines.append("🧾 Покупки:")
+    lines = [f"🏪 {receipt.retail_place or 'Без названия'}\n📍 {receipt.address or 'Адрес не указан'}\n", "🧾 Покупки:"]
+    for item in receipt.items:
+        lines.append(
+            f"{item.name}\n{item.price / 100:.2f} ₽ × {item.quantity} = {item.sum / 100:.2f} ₽"
+        )
 
-    # Список товаров
-    item_lines = [
-        f"{item.name}\n{item.price / 100:.2f} ₽ × {item.quantity} = {item.sum / 100:.2f} ₽"
-        for item in receipt.items
-    ]
-
-    full_text = "\n".join(header_lines + item_lines)
-    await callback.message.answer(full_text)
+    await callback.message.answer("\n".join(lines))
     await callback.answer()
 
 

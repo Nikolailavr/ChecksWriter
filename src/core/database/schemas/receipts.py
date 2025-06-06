@@ -15,12 +15,14 @@ class ReceiptItemSchema(BaseModel):
     class Config:
         orm_mode = True
 
+
 class MetadataSchema(BaseModel):
     id: Optional[int] = None
     ofd_id: Optional[str] = Field(None, alias="ofdId")
     address: Optional[str] = None
     subtype: Optional[str] = None
     receive_date: Optional[datetime] = Field(None, alias="receiveDate")
+
 
 class ReceiptSchema(BaseModel):
     user_id: Optional[int] = Field(None, alias="user_id")
@@ -54,6 +56,7 @@ class ReceiptSchema(BaseModel):
     applied_taxation_type: Optional[int] = Field(None, alias="appliedTaxationType")
     fiscal_document_number: int = Field(..., alias="fiscalDocumentNumber")
     fiscal_document_format_ver: int = Field(..., alias="fiscalDocumentFormatVer")
+
 
 class ReceiptDBSchema(BaseModel):
     user_id: Optional[int] = Field(None, alias="user_id")
