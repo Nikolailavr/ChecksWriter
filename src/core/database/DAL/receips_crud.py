@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from sqlalchemy import select, delete, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 
 from core.database.models import Receipt, ReceiptItem
 from core.database.schemas import ReceiptSchema
@@ -111,7 +111,7 @@ class ReceiptRepository:
         try:
             stmt = (
                 select(Receipt)
-                .options(selectinload(Receipt.items))
+                .options(joinedload(Receipt.items))
                 .where(Receipt.receipt_id == receipt_id)
             )
             result = await self.session.execute(stmt)
