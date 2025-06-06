@@ -35,7 +35,7 @@ class ReceiptService:
         async with db_helper.get_session() as session:
             receipt = await ReceiptRepository(session).get_receipt(receipt_id)
             if receipt:
-                return ReceiptDBSchema.model_validate(receipt)
+                return ReceiptDBSchema.model_validate(receipt, from_attributes=True)
             return None
 
     @staticmethod
