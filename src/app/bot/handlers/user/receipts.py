@@ -63,7 +63,7 @@ async def show_receipt_items(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("delete:"))
 async def delete_receipt(callback: CallbackQuery):
-    receipt_id = int(callback.data.split(":")[1])
+    receipt_id = callback.data.split(":")[1]
     await ReceiptService.delete_receipt(receipt_id)
     await callback.message.edit_text("✅ Чек удалён.")
     await callback.answer()

@@ -67,7 +67,7 @@ async def show_receipts(
     # 4 ряда по 1 кнопке с чеком
     for receipt in current_page_receipts:
         date_str = receipt.date_time.strftime("%d.%m.%Y %H:%M")
-        callback_data = f"receipt:{str(receipt.receipt_id)}"
+        callback_data = f"receipt:{receipt.receipt_id}"
         logger.info(f"{callback_data=}")
         keyboard.append(
             [InlineKeyboardButton(text=date_str, callback_data=callback_data)]
@@ -98,7 +98,7 @@ async def show_receipts(
         await message.answer(f"Чеки в категории «{category}»:", reply_markup=markup)
 
 
-def build_receipt_action_keyboard(receipt_id: int) -> InlineKeyboardMarkup:
+def build_receipt_action_keyboard(receipt_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -124,7 +124,7 @@ def build_receipt_action_keyboard(receipt_id: int) -> InlineKeyboardMarkup:
 
 # --- Кнопки выбора категории ---
 def build_category_keyboard(
-    receipt_id: int,
+    receipt_id: str,
     categories: list[str],
 ) -> InlineKeyboardMarkup:
     keyboard = [
