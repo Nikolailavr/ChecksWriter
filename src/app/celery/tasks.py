@@ -102,7 +102,7 @@ def process_check(self, filename: str):
         result = parser.check(filename)
         if not isinstance(result, dict):
             raise ValueError("Parser должен возвращать словарь")
-        success_check(data={"result": result})
+        success_check(data={"result": result, "filename": filename})
         return {"status": "success", "result": result, "filename": filename}
     except FileNotFoundError as e:
         logger.warning(f"Файл {filename} не найден парсером: {e}")
