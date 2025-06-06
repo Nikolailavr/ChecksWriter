@@ -5,6 +5,7 @@ from core.database import db_helper
 from core.database.DAL import ReceiptRepository
 from core.database.models import Receipt, ReceiptItem
 from core.database.schemas import ReceiptSchema
+from core.database.schemas.receipts import ReceiptDBSchema
 
 
 class ReceiptService:
@@ -30,11 +31,11 @@ class ReceiptService:
             return receipts
 
     @staticmethod
-    async def get_receipt(receipt_id: str) -> ReceiptSchema | None:
+    async def get_receipt(receipt_id: str) -> ReceiptDBSchema | None:
         async with db_helper.get_session() as session:
             receipt = await ReceiptRepository(session).get_receipt(receipt_id)
             if receipt:
-                return ReceiptSchema.model_validate(receipt)
+                return ReceiptDBSchema.model_validate(receipt)
             return None
 
     @staticmethod

@@ -15,14 +15,16 @@ class ReceiptItemSchema(BaseModel):
     class Config:
         orm_mode = True
 
-class ReceiptSchema(BaseModel):
-    user_id: Optional[int] = Field(None, alias="user_id")
-    category: Optional[str] = None
-    receipt_id: Optional[int] = None
+class MetadataSchema(BaseModel):
+    id: Optional[int] = None
     ofd_id: Optional[str] = Field(None, alias="ofdId")
     address: Optional[str] = None
     subtype: Optional[str] = None
     receive_date: Optional[datetime] = Field(None, alias="receiveDate")
+
+class ReceiptSchema(BaseModel):
+    user_id: Optional[int] = Field(None, alias="user_id")
+    category: Optional[str] = None
     code: Optional[int] = None
     user: Optional[str] = None
     buyer: Optional[str] = None
@@ -52,6 +54,22 @@ class ReceiptSchema(BaseModel):
     applied_taxation_type: Optional[int] = Field(None, alias="appliedTaxationType")
     fiscal_document_number: int = Field(..., alias="fiscalDocumentNumber")
     fiscal_document_format_ver: int = Field(..., alias="fiscalDocumentFormatVer")
+
+class ReceiptDBSchema(BaseModel):
+    user_id: Optional[int] = Field(None, alias="user_id")
+    category: Optional[str] = None
+    receipt_id: Optional[str] = None
+    address: Optional[str] = None
+    receive_date: Optional[datetime] = Field(None, alias="receiveDate")
+    items: List[ReceiptItemSchema]
+    date_time: datetime = Field(..., alias="dateTime")
+    total_sum: int = Field(..., alias="totalSum")
+    credit_sum: Optional[int] = Field(0, alias="creditSum")
+    prepaid_sum: Optional[int] = Field(0, alias="prepaidSum")
+    retail_place: Optional[str] = Field(None, alias="retailPlace")
+    cash_total_sum: Optional[int] = Field(0, alias="cashTotalSum")
+    provision_sum: Optional[int] = Field(0, alias="provisionSum")
+    ecash_total_sum: Optional[int] = Field(0, alias="ecashTotalSum")
 
     class Config:
         orm_mode = True
