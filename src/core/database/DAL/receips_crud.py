@@ -112,7 +112,7 @@ class ReceiptRepository:
             stmt = (
                 select(Receipt)
                 .options(selectinload(Receipt.items))
-                .where(Receipt.id == receipt_id)
+                .where(Receipt.receipt_id == receipt_id)
             )
             result = await self.session.execute(stmt)
             return result.scalars().one_or_none()
