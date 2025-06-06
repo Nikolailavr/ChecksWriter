@@ -30,10 +30,12 @@ class ReceiptService:
             return receipts
 
     @staticmethod
-    async def get_receipt(receipt_id: str) -> ReceiptSchema:
+    async def get_receipt(receipt_id: str) -> ReceiptSchema | None:
         async with db_helper.get_session() as session:
             receipt = await ReceiptRepository(session).get_receipt(receipt_id)
-            return ReceiptSchema.model_validate(receipt)
+            if receipt:
+                return ReceiptSchema.model_validate(receipt)
+            return None
 
     @staticmethod
     async def delete_receipt(receipt_id: str):

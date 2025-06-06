@@ -12,18 +12,17 @@ class ReceiptItemSchema(BaseModel):
     payment_type: Optional[int] = Field(None, alias="paymentType")
     product_type: Optional[int] = Field(None, alias="productType")
 
-
-class MetadataSchema(BaseModel):
-    id: Optional[int] = None
-    ofd_id: Optional[str] = Field(None, alias="ofdId")
-    address: Optional[str] = None
-    subtype: Optional[str] = None
-    receive_date: Optional[datetime] = Field(None, alias="receiveDate")
-
+    class Config:
+        orm_mode = True
 
 class ReceiptSchema(BaseModel):
     user_id: Optional[int] = Field(None, alias="user_id")
     category: Optional[str] = None
+    receipt_id: Optional[int] = None
+    ofd_id: Optional[str] = Field(None, alias="ofdId")
+    address: Optional[str] = None
+    subtype: Optional[str] = None
+    receive_date: Optional[datetime] = Field(None, alias="receiveDate")
     code: Optional[int] = None
     user: Optional[str] = None
     buyer: Optional[str] = None
@@ -33,7 +32,6 @@ class ReceiptSchema(BaseModel):
     user_inn: str = Field(..., alias="userInn")
     date_time: datetime = Field(..., alias="dateTime")
     kkt_reg_id: str = Field(..., alias="kktRegId")
-    metadata: Optional[MetadataSchema] = None
     operator: Optional[str] = None
     total_sum: int = Field(..., alias="totalSum")
     credit_sum: Optional[int] = Field(0, alias="creditSum")
@@ -54,3 +52,6 @@ class ReceiptSchema(BaseModel):
     applied_taxation_type: Optional[int] = Field(None, alias="appliedTaxationType")
     fiscal_document_number: int = Field(..., alias="fiscalDocumentNumber")
     fiscal_document_format_ver: int = Field(..., alias="fiscalDocumentFormatVer")
+
+    class Config:
+        orm_mode = True
