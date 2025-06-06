@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 cel_helper = CeleryHelper()
 
 
-@celery_app.task(queue="high")
 def success_check(data: dict):
     from app.bot.main import send_msg
 
@@ -93,6 +92,7 @@ def process_check(self, filename: str):
         result = parser.check(filename)
         if not isinstance(result, dict):
             raise ValueError("Parser должен возвращать словарь")
+        success_check(data={"result": result})
         return {"status": "success", "result": result, "filename": filename}
     except FileNotFoundError as e:
         logger.warning(f"Файл {filename} не найден парсером: {e}")
@@ -120,13 +120,6 @@ def remove_file(filename: str):
 @task_success.connect
 def task_success_handler(sender=None, result=None, **kwargs):
     logger.info(f"✅ Задача '{sender.name}' выполнена успешно")
-
-    # Проверка результата от process_check
-    if sender.name == "app.celery.tasks.process_check" and isinstance(result, dict):
-        parsed = result.get("result")
-        filename = result.get("filename")
-        if parsed and filename:
-            success_check.delay(data={"result": parsed, "filename": filename})
 
 
 # Ошибка при выполнении задачи
