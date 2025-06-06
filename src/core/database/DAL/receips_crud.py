@@ -3,6 +3,7 @@ from collections.abc import Sequence
 from sqlalchemy import select, delete, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from core.database.models import Receipt, ReceiptItem
 from core.database.schemas import ReceiptSchema
@@ -108,7 +109,11 @@ class ReceiptRepository:
 
     async def get_receipt(self, receipt_id: str) -> Receipt:
         try:
-            stmt = select(Receipt).where(ReceiptItem.receipt_id == receipt_id)
+            stmt = (
+                select(Receipt)
+                .options(selectinload(Receipt.items))
+                .where(Receipt.id == receipt_id)
+            )
             result = await self.session.execute(stmt)
             return result.scalars().one_or_none()
         except SQLAlchemyError as ex:
