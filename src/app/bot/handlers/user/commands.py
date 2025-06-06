@@ -15,10 +15,9 @@ router = Router()
 async def __start(msg: Message) -> None:
     await UserService.get_or_create(telegram_id=msg.from_user.id)
     await msg.answer(
-        "Привет! Отправь мне изображение, и я сохраню его в указанной категории.\n"
+        "Привет! Отправь мне фото QR чека, и я сохраню его в указанной категории.\n"
         "Доступные команды:\n"
-        "/categories - Показать все категории\n"
-        "/images <категория> - Показать изображения в категории"
+        "/list - Показать все категории"
     )
 
 

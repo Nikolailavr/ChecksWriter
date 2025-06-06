@@ -43,7 +43,7 @@ async def show_receipts_callback(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("change_cat:"))
 async def handle_change_category(callback: CallbackQuery, state: FSMContext):
-    receipt_id = int(callback.data.split(":")[1])
+    receipt_id = callback.data.split(":")[1]
     telegram_id = callback.from_user.id
 
     categories = await ReceiptService.get_categories(telegram_id)
@@ -62,7 +62,7 @@ async def handle_change_category(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.startswith("new_cat:"))
 async def handle_new_category_request(callback: CallbackQuery, state: FSMContext):
-    receipt_id = int(callback.data.split(":")[1])
+    receipt_id = callback.data.split(":")[1]
     await state.set_state(ChangeCategoryState.new_category)
     await state.update_data(receipt_id=receipt_id)
     await callback.message.edit_text("Введите название новой категории:")
@@ -82,7 +82,7 @@ async def handle_new_category_input(message: Message, state: FSMContext):
 @router.callback_query(F.data.startswith("set_cat:"))
 async def handle_set_category(callback: CallbackQuery, state: FSMContext):
     parts = callback.data.split(":")
-    receipt_id = int(parts[1])
+    receipt_id = parts[1]
     new_category = parts[2]
     await ReceiptService.update_category(receipt_id, new_category)
     await state.clear()
