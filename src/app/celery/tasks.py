@@ -46,7 +46,7 @@ def success_check(data: dict):
         logger.error(f"[ERROR] {ex}")
         text = "❌ Ошибка, чек уже внесен"
         if category:
-            text += f" в кат. {category}"
+            text += f" в категорию {category}"
         logger.info(f"Отправка сообщения: {text}")
         cel_helper.run(send_msg(chat_id=telegram_id, text=text))
     else:
