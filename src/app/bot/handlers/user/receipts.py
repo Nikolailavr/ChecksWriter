@@ -49,7 +49,7 @@ async def show_receipt_items(callback: CallbackQuery):
         lines.append(
             f"{item.name}\n{item.price / 100:.2f} ₽ × {item.quantity} = {item.sum / 100:.2f} ₽"
         )
-
+    lines.append(f"Итого: {receipt.total_sum / 100:.2f} ₽")
     await callback.message.answer("\n".join(lines))
     await callback.answer()
 
