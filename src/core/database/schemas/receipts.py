@@ -59,20 +59,20 @@ class ReceiptSchema(BaseModel):
 
 
 class ReceiptDBSchema(BaseModel):
-    user_id: Optional[int] = Field(None, alias="user_id")
-    category: Optional[str] = None
-    receipt_id: Optional[str] = None
+    user_id: int = None
+    category: str = None
+    receipt_id: str = None
     address: Optional[str] = None
-    receive_date: Optional[datetime] = Field(None, alias="receiveDate")
+    receive_date: Optional[datetime] = None
     items: List[ReceiptItemSchema]
-    date_time: datetime = Field(..., alias="dateTime")
-    total_sum: int = Field(..., alias="totalSum")
-    credit_sum: Optional[int] = Field(0, alias="creditSum")
-    prepaid_sum: Optional[int] = Field(0, alias="prepaidSum")
-    retail_place: Optional[str] = Field(None, alias="retailPlace")
-    cash_total_sum: Optional[int] = Field(0, alias="cashTotalSum")
-    provision_sum: Optional[int] = Field(0, alias="provisionSum")
-    ecash_total_sum: Optional[int] = Field(0, alias="ecashTotalSum")
+    date_time: datetime
+    total_sum: int = 0
+    credit_sum: Optional[int] = 0
+    prepaid_sum: Optional[int] = 0
+    retail_place: Optional[str] = None
+    cash_total_sum: Optional[int] = 0
+    provision_sum: Optional[int] = 0
+    ecash_total_sum: Optional[int] = 0
 
     class Config:
         orm_mode = True
