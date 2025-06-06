@@ -35,14 +35,16 @@ async def receipt_action_menu(callback: CallbackQuery):
 @router.callback_query(F.data.startswith("view:"))
 async def show_receipt_items(callback: CallbackQuery):
     receipt_id = callback.data.split(":")[1]
-    # receipt_item = await ReceiptService.get_receipt(receipt_id)
     receipt = await ReceiptService.get_receipt(receipt_id)
     logger.info(f"{receipt=}")
     if not receipt:
         await callback.message.answer("Покупки не найдены.")
         return
 
-    lines = [f"🏪 {receipt.retail_place or 'Без названия'}\n📍 {receipt.address or 'Адрес не указан'}\n", "🧾 Покупки:"]
+    lines = [
+        f"🏪 {receipt.retail_place or 'Без названия'}\n📍 {receipt.address or 'Адрес не указан'}\n",
+        "🧾 Покупки:",
+    ]
     for item in receipt.items:
         lines.append(
             f"{item.name}\n{item.price / 100:.2f} ₽ × {item.quantity} = {item.sum / 100:.2f} ₽"
