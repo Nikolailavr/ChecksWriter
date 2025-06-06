@@ -97,7 +97,7 @@ class ReceiptRepository:
         except SQLAlchemyError as ex:
             raise ex
 
-    async def get_receipt(self, receipt_id: int) -> Sequence[ReceiptItem]:
+    async def get_receipt(self, receipt_id: str) -> Sequence[ReceiptItem]:
         try:
             stmt = select(ReceiptItem).where(ReceiptItem.receipt_id == receipt_id)
             result = await self.session.execute(stmt)
@@ -106,7 +106,7 @@ class ReceiptRepository:
         except SQLAlchemyError as ex:
             raise ex
 
-    async def delete_receipt(self, receipt_id: int) -> bool | None:
+    async def delete_receipt(self, receipt_id: str) -> bool | None:
         try:
             await self.session.execute(
                 delete(Receipt).where(Receipt.receipt_id == receipt_id)
@@ -117,7 +117,7 @@ class ReceiptRepository:
             await self.session.rollback()
             raise e
 
-    async def update_category(self, receipt_id: int, new_category: str):
+    async def update_category(self, receipt_id: str, new_category: str):
         stmt = (
             update(Receipt)
             .where(Receipt.id == receipt_id)

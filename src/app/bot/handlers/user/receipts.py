@@ -24,7 +24,7 @@ async def paginate_receipts(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("receipt:"))
 async def receipt_action_menu(callback: CallbackQuery):
-    receipt_id = int(callback.data.split(":")[1])
+    receipt_id = callback.data.split(":")[1]
     keyboard = build_receipt_action_keyboard(receipt_id)
     await callback.message.edit_text(
         "Выберите действие для чека:", reply_markup=keyboard
