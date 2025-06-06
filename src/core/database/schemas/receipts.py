@@ -14,7 +14,7 @@ class ReceiptItemSchema(BaseModel):
 
 
 class MetadataSchema(BaseModel):
-    id: Optional[str] = None
+    id: Optional[int] = None
     ofd_id: Optional[str] = Field(None, alias="ofdId")
     address: Optional[str] = None
     subtype: Optional[str] = None

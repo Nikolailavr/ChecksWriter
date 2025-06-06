@@ -15,7 +15,7 @@ class ReceiptRepository:
     async def create(self, receipt_schema: ReceiptSchema) -> Receipt:
         try:
             receipt = Receipt(
-                receipt_id=receipt_schema.metadata.id,
+                receipt_id=str(receipt_schema.metadata.id),
                 user_id=receipt_schema.user_id,
                 category=receipt_schema.category,
                 code=receipt_schema.code,

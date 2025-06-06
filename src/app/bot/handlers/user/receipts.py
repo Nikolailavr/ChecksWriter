@@ -34,17 +34,30 @@ async def receipt_action_menu(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("view:"))
 async def show_receipt_items(callback: CallbackQuery):
-    receipt_id = int(callback.data.split(":")[1])
-    items = await ReceiptService.get_receipt(receipt_id)
-    if not items:
+    receipt_id = callback.data.split(":")[1]
+    receipt = await ReceiptService.get_receipt(receipt_id)
+
+    if not receipt or not receipt.items:
         await callback.message.answer("Покупки не найдены.")
-    else:
-        lines = ["🧾 Покупки:"]
-        for item in items:
-            lines.append(
-                f"{item.name}\n{item.price / 100:.2f} ₽ × {item.quantity} = {item.sum / 100:.2f} ₽\n"
-            )
-        await callback.message.answer("\n".join(lines))
+        await callback.answer()
+        return
+
+    # Заголовок с местом покупки
+    header_lines = []
+    if receipt.retail_place:
+        header_lines.append(f"🏪 {receipt.retail_place}")
+    if receipt.retail_place_address:
+        header_lines.append(f"📍 {receipt.retail_place_address}")
+    header_lines.append("🧾 Покупки:")
+
+    # Список товаров
+    item_lines = [
+        f"{item.name}\n{item.price / 100:.2f} ₽ × {item.quantity} = {item.sum / 100:.2f} ₽"
+        for item in receipt.items
+    ]
+
+    full_text = "\n".join(header_lines + item_lines)
+    await callback.message.answer(full_text)
     await callback.answer()
 
 
