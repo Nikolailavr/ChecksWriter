@@ -124,12 +124,20 @@ def build_receipt_action_keyboard(receipt_id: int) -> InlineKeyboardMarkup:
 
 # --- Кнопки выбора категории ---
 def build_category_keyboard(
-    receipt_id: int, categories: list[str]
+    receipt_id: int,
+    categories: list[str],
 ) -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton(text=cat, callback_data=f"set_cat:{receipt_id}:{cat}")]
         for cat in categories
     ]
+    keyboard.append(
+        [
+            InlineKeyboardButton(
+                text="➕ Новая категория", callback_data=f"new_cat:{receipt_id}"
+            )
+        ]
+    )
     keyboard.append(
         [InlineKeyboardButton(text="🔙 Назад", callback_data=f"view:{receipt_id}")]
     )
