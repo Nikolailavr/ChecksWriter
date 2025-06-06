@@ -40,7 +40,7 @@ async def show_receipt_items(callback: CallbackQuery):
     if not receipt:
         await callback.message.answer("Покупки не найдены.")
         return
-    address = receipt.address.replace(",,",",")
+    address = receipt.address.replace(",,", ",")
     lines = [
         f"🏪 {receipt.retail_place or 'Без названия'}\n📍 {address or 'Адрес не указан'}\n",
         "🧾 Покупки:",
