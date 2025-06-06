@@ -31,6 +31,7 @@ class ReceiptSchema(BaseModel):
     user: Optional[str] = None
     buyer: Optional[str] = None
     items: List[ReceiptItemSchema]
+    metadata: Optional[MetadataSchema] = None
     nds_no: Optional[int] = Field(None, alias="ndsNo")
     region: Optional[str] = None
     user_inn: str = Field(..., alias="userInn")
