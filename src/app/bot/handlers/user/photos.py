@@ -3,6 +3,8 @@ import os
 import uuid
 
 from aiogram import F, Dispatcher, Router
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
 from app.celery.tasks import process_check
@@ -15,19 +17,21 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 
+class ReceiptUploadState(StatesGroup):
+    waiting_for_category = State()
+
+
 @router.message(F.photo)
-async def handle_photo(msg: Message):
-    # Генерируем уникальное имя файла
+async def handle_photo(msg: Message, state: FSMContext):
     file_id = msg.photo[-1].file_id
     file = await msg.bot.get_file(file_id)
     filename = f"{uuid.uuid4()}.jpg"
     filepath = os.path.join(IMAGE_FOLDER, filename)
 
-    # Сохраняем изображение
     logger.info(f"Сохраняем файл: {filepath}")
     await msg.bot.download_file(file.file_path, filepath)
 
-    # Сохраняем базовую информацию в Redis
+    # Сохраняем в Redis
     redis_key = f"receipt:{filename}"
     await async_redis_client.hset(
         redis_key,
@@ -36,31 +40,34 @@ async def handle_photo(msg: Message):
             "category": "Общие",
         },
     )
-    await async_redis_client.expire(redis_key, 600)  # TTL 10 минут
+    await async_redis_client.expire(redis_key, 600)
+
+    # Устанавливаем состояние и временные данные
+    await state.set_state(ReceiptUploadState.waiting_for_category)
+    await state.update_data(receipt_key=redis_key)
+
     task = process_check.delay(filename)
-    logger.info(f"Изображение сохранено. Обработка начата (ID задачи: {task.id})")
+    logger.info(f"Обработка запущена (ID задачи: {task.id})")
     await msg.answer("Введите название категории для этого чека:")
 
 
-@router.message(F.text)
-async def handle_category(msg: Message):
-    keys = await async_redis_client.keys("receipt:*")
-    target_key = None
+@router.message(ReceiptUploadState.waiting_for_category)
+async def handle_category(msg: Message, state: FSMContext):
+    data = await state.get_data()
+    redis_key = data.get("receipt_key")
 
-    for key in keys:
-        telegram_id = await async_redis_client.hget(key, "telegram_id")
-        if telegram_id == str(msg.from_user.id):
-            target_key = key
-            break
-
-    if not target_key:
-        await msg.answer("Чек не найден, начните с загрузки фото.")
+    if not redis_key or not await async_redis_client.exists(redis_key):
+        await state.clear()
+        await msg.answer(
+            "⏰ Время на ввод категории истекло. Пожалуйста, загрузите фото заново."
+        )
         return
 
     category = msg.text.strip()
-    await async_redis_client.hset(target_key, "category", category)
+    await async_redis_client.hset(redis_key, "category", category)
 
-    await msg.answer("🗳 Обработываю данные...")
+    await state.clear()
+    await msg.answer("🗳 Обрабатываю данные...")
 
 
 def register_users_photos_handlers(dp: Dispatcher) -> None:

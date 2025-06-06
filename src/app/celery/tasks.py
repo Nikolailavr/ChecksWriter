@@ -21,9 +21,12 @@ def success_check(data: dict):
     from app.bot.main import send_msg
 
     filename = data.get("filename")
+    category = None
+    telegram_id = None
     try:
         logger.info(f"Забираем данные из redis для файла: {filename}")
         user_data = redis_client.hgetall(f"receipt:{filename}")
+        category = user_data.get("category")
         if not user_data:
             logger.warning(f"Данные для receipt:{filename} не найдены в Redis.")
             return
@@ -36,17 +39,26 @@ def success_check(data: dict):
             ReceiptService.save_receipt(
                 data=data["result"],
                 telegram_id=telegram_id,
-                category=user_data["category"],
+                category=category,
             )
         )
     except SQLAlchemyError as ex:
         logger.error(f"[ERROR] {ex}")
-        logger.info("Отправка сообщения: ❌ Ошибка, чек уже внесен")
-        cel_helper.run(send_msg(chat_id=telegram_id, text="❌ Ошибка, чек уже внесен"))
+        text = "❌ Ошибка, чек уже внесен"
+        if category:
+            text += f" в кат. {category}"
+        logger.info(f"Отправка сообщения: {text}")
+        cel_helper.run(send_msg(chat_id=telegram_id, text=text))
     else:
-        logger.info("Отправка сообщения: ✅ Данные чека успешно внесены!")
+        text = "✅ Данные чека внесены в категорию {category}"
+        logger.info(
+            f"Отправка сообщения: {text}"
+        )
         cel_helper.run(
-            send_msg(chat_id=telegram_id, text="✅ Данные чека успешно внесены!")
+            send_msg(
+                chat_id=telegram_id,
+                text=text,
+            )
         )
     finally:
         redis_client.delete(f"receipt:{filename}")

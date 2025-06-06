@@ -73,11 +73,10 @@ async def handle_new_category_input(message: Message, state: FSMContext):
     new_cat = message.text.strip()
     data = await state.get_data()
     receipt_id = data["receipt_id"]
-
-    # Сохраняем новую категорию в чек
+    logger.info(f"{receipt_id=} | {new_cat=}")
     await ReceiptService.update_category(receipt_id, new_cat)
     await state.clear()
-    await message.answer(f"✅ Категория обновлена на <b>{new_cat}</b>.")
+    await message.answer(f"✅ Категория обновлена на {new_cat}.")
 
 
 @router.callback_query(F.data.startswith("set_cat:"))
@@ -85,8 +84,6 @@ async def handle_set_category(callback: CallbackQuery, state: FSMContext):
     parts = callback.data.split(":")
     receipt_id = int(parts[1])
     new_category = parts[2]
-
-    # Обновление категории (нужен соответствующий метод в ReceiptService)
     await ReceiptService.update_category(receipt_id, new_category)
     await state.clear()
     await callback.message.edit_text(f"✅ Категория обновлена на {new_category}.")
