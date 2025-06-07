@@ -86,7 +86,7 @@ class ReceiptRepository:
                     .order_by(Receipt.date_time.desc())
                 )
                 result = await self.session.execute(stmt)
-                result = result.scalars().all()
+                result = result.unique().scalars().all()
             else:
                 stmt = (
                     select(Receipt.category)
