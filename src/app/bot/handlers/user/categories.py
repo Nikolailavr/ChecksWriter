@@ -107,8 +107,8 @@ async def export_category_receipts(callback: CallbackQuery):
         await callback.answer()
         return
 
-    output = io.StringIO()
-    writer = csv.writer(output)
+    output = io.StringIO(newline="", encoding="utf-8")
+    writer = csv.writer(output, delimiter=';', quoting=csv.QUOTE_MINIMAL)
     writer.writerow(
         [
             "Date",
@@ -134,8 +134,8 @@ async def export_category_receipts(callback: CallbackQuery):
                     time_str,
                     item.name,
                     item.quantity,
-                    f"{item.price / 100:.2f}",
-                    f"{item.sum / 100:.2f}",
+                    f"{item.price / 100:.2f}".replace(".", ","),
+                    f"{item.sum / 100:.2f}".replace(".", ","),
                     receipt.retail_place or "",
                     receipt.address or "",
                     receipt.receipt_id,
@@ -143,10 +143,10 @@ async def export_category_receipts(callback: CallbackQuery):
             )
 
     # Подготовка CSV-файла
-    output.seek(0)
-    file = BufferedInputFile(
-        output.read().encode("utf-8"), filename=f"category_{category}.csv"
-    )
+    # Оборачиваем в байты с BOM для Excel
+    csv_data = output.getvalue()
+    csv_bytes = ("\ufeff" + csv_data).encode("utf-8")
+    file = BufferedInputFile(csv_bytes, filename=f"category_{category}.csv")
     await callback.message.answer_document(
         file, caption=f"📄 Чеки из категории «{category}»"
     )
