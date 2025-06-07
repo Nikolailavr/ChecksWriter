@@ -138,7 +138,7 @@ async def export_category_receipts(callback: CallbackQuery):
                     f"{item.sum / 100:.2f}".replace(".", ","),
                     receipt.retail_place or "",
                     receipt.address or "",
-                    f'="{receipt.receipt_id}"'
+                    f'="{receipt.receipt_id}"',
                 ]
             )
 

@@ -12,10 +12,6 @@ class ReceiptItemSchema(BaseModel):
     payment_type: Optional[int] = Field(None, alias="paymentType")
     product_type: Optional[int] = Field(None, alias="productType")
 
-    class Config:
-        orm_mode = True
-
-
 class MetadataSchema(BaseModel):
     id: Optional[int] = None
     ofd_id: Optional[str] = Field(None, alias="ofdId")
@@ -74,6 +70,3 @@ class ReceiptDBSchema(BaseModel):
     cash_total_sum: Optional[int] = 0
     provision_sum: Optional[int] = 0
     ecash_total_sum: Optional[int] = 0
-
-    class Config:
-        orm_mode = True
