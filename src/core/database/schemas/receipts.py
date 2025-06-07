@@ -12,6 +12,7 @@ class ReceiptItemSchema(BaseModel):
     payment_type: Optional[int] = Field(None, alias="paymentType")
     product_type: Optional[int] = Field(None, alias="productType")
 
+
 class MetadataSchema(BaseModel):
     id: Optional[int] = None
     ofd_id: Optional[str] = Field(None, alias="ofdId")
