@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from sqlalchemy import select, delete, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload
 
 from core.database.models import Receipt, ReceiptItem
 from core.database.schemas import ReceiptSchema
@@ -81,7 +81,7 @@ class ReceiptRepository:
             if category:
                 stmt = (
                     select(Receipt)
-                    .options(selectinload(Receipt.items))
+                    .options(joinedload(Receipt.items))
                     .where(Receipt.user_id == telegram_id, Receipt.category == category)
                     .order_by(Receipt.date_time.desc())
                 )
