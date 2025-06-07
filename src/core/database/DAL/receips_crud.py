@@ -81,6 +81,7 @@ class ReceiptRepository:
             if category:
                 stmt = (
                     select(Receipt)
+                    .options(joinedload(Receipt.items))
                     .where(Receipt.user_id == telegram_id, Receipt.category == category)
                     .order_by(Receipt.date_time.desc())
                 )
