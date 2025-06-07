@@ -107,8 +107,8 @@ async def export_category_receipts(callback: CallbackQuery):
         await callback.answer()
         return
 
-    output = io.StringIO(newline="", encoding="utf-8")
-    writer = csv.writer(output, delimiter=';', quoting=csv.QUOTE_MINIMAL)
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, delimiter=";", quoting=csv.QUOTE_MINIMAL)
     writer.writerow(
         [
             "Date",
