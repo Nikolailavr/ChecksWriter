@@ -1,9 +1,11 @@
+import csv
+import io
 import logging
 
 from aiogram import F, Dispatcher, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, BufferedInputFile
 
 from app.bot.keyboards.user import (
     show_categories,
@@ -87,6 +89,68 @@ async def handle_set_category(callback: CallbackQuery, state: FSMContext):
     await ReceiptService.update_category(receipt_id, new_category)
     await state.clear()
     await callback.message.edit_text(f"✅ Категория обновлена на {new_category}.")
+
+
+@router.callback_query(F.data.startswith("export_cat:"))
+async def export_category_receipts(callback: CallbackQuery):
+    parts = callback.data.split(":")
+    if len(parts) != 2:
+        await callback.answer("⚠ Неверный формат данных.")
+        return
+
+    category = parts[1]
+    telegram_id = callback.from_user.id
+
+    receipts = await ReceiptService.get_receipts(telegram_id, category)
+    if not receipts:
+        await callback.message.answer("❌ Нет чеков в этой категории.")
+        await callback.answer()
+        return
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(
+        [
+            "Date",
+            "Time",
+            "Name",
+            "Quantity",
+            "Price",
+            "Sum",
+            "Retail Place",
+            "Address",
+            "Receipt ID",
+        ]
+    )
+
+    for receipt in receipts:
+        date_str = receipt.date_time.strftime("%d-%m-%Y")
+        time_str = receipt.date_time.strftime("%H:%M:%S")
+
+        for item in receipt.items:
+            writer.writerow(
+                [
+                    date_str,
+                    time_str,
+                    item.name,
+                    item.quantity,
+                    f"{item.price / 100:.2f}",
+                    f"{item.sum / 100:.2f}",
+                    receipt.retail_place or "",
+                    receipt.address or "",
+                    receipt.receipt_id,
+                ]
+            )
+
+    # Подготовка CSV-файла
+    output.seek(0)
+    file = BufferedInputFile(
+        output.read().encode("utf-8"), filename=f"category_{category}.csv"
+    )
+    await callback.message.answer_document(
+        file, caption=f"📄 Чеки из категории «{category}»"
+    )
+    await callback.answer()
 
 
 def register_users_categories_handlers(dp: Dispatcher) -> None:

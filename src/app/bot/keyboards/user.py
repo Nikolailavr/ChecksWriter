@@ -74,7 +74,11 @@ async def show_receipts(
         )
 
     # Пагинация
-    pagination_buttons = []
+    pagination_buttons = [
+        InlineKeyboardButton(
+            text="📤 Экспорт в Excel", callback_data=f"export_cat:{category}"
+        )
+    ]
     if start > 0:
         pagination_buttons.append(
             InlineKeyboardButton(
