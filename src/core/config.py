@@ -68,6 +68,7 @@ class Celery(BaseModel):
 class Redis(BaseModel):
     HOST: str
     PORT: int
+    PASSWORD: str
 
 
 class Settings(BaseSettings):

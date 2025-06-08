@@ -3,6 +3,7 @@ services:
     build:
       dockerfile: ./docker-build/app/Dockerfile_bot
       context: ./
+    restart: unless-stopped
     command: python3 main.py
     volumes:
       - shared-data:/app/shared
@@ -13,20 +14,20 @@ services:
     depends_on:
       pg:
         condition: service_healthy
-    develop:
-      watch:
-        - action: sync+restart
-          path: ./src
-          target: /app
-        - action: rebuild
-          path: ./poetry.lock
+#    develop:
+#      watch:
+#        - action: sync+restart
+#          path: ./src
+#          target: /app
+#        - action: rebuild
+#          path: ./poetry.lock
 
   pg:
     image: postgres:16.9
     environment:
-      POSTGRES_DB: checks
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PGDATA: /var/lib/postgresql/data
     ports:
       - "5432:5432"
@@ -37,6 +38,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 3
+    restart: unless-stopped
 
 #  pgadmin:
 #    image: dpage/pgadmin4
@@ -64,12 +66,14 @@ services:
       - PYTHONPATH=/app/src
     depends_on:
       - redis
+    restart: unless-stopped
 
   flower:
       build:
         context: .
         dockerfile: ./docker-build/app/Dockerfile_base
-      command: celery -A app.celery.celery_app flower --port=5555
+      command: celery -A app.celery.celery_app flower --port=5555 \
+        --basic_auth=${FLOWER_USER}:${FLOWER_PASSWORD}
       volumes:
         - .:/app
       working_dir: /app
@@ -80,9 +84,13 @@ services:
       depends_on:
         - redis
         - celery
+      restart: unless-stopped
+
   redis:
     image: redis:8
     container_name: redis
+    command: ["redis-server", "--bind", "127.0.0.1", "--requirepass", "${APP_CONFIG__REDIS__PASSWORD}"]
+    restart: unless-stopped
     ports:
       - "6379:6379"
 volumes:
