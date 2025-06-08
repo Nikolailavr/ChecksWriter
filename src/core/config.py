@@ -33,6 +33,9 @@ class DatabaseConfig(BaseModel):
     echo_pool: bool = False
     max_overflow: int = 10
     pool_size: int = 5
+    name: str
+    user: str
+    password: str
 
     naming_convention: dict[str, str] = {
         "ix": "ix_%(column_0_label)s",
@@ -71,6 +74,11 @@ class Redis(BaseModel):
     PASSWORD: str
 
 
+class Flower(BaseModel):
+    user: str
+    password: str
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(
@@ -89,6 +97,7 @@ class Settings(BaseSettings):
     schedule: Schedule
     celery: Celery
     redis: Redis
+    flower: Flower
 
 
 settings = Settings()

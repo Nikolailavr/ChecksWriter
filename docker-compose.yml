@@ -25,9 +25,9 @@ services:
   pg:
     image: postgres:16.9
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${APP_CONFIG__DB__NAME}
+      POSTGRES_USER: ${APP_CONFIG__DB__USER}
+      POSTGRES_PASSWORD: ${APP_CONFIG__DB__PASSWORD}
       PGDATA: /var/lib/postgresql/data
     ports:
       - "5432:5432"
@@ -73,12 +73,12 @@ services:
         context: .
         dockerfile: ./docker-build/app/Dockerfile_base
       command: celery -A app.celery.celery_app flower --port=5555 \
-        --basic_auth=${FLOWER_USER}:${FLOWER_PASSWORD}
+        --basic_auth=${APP_CONFIG__FLOWER__USER}:${APP_CONFIG__FLOWER__PASSWORD}
       volumes:
         - .:/app
       working_dir: /app
       environment:
-        - PYTHONPATH=/app/src
+        PYTHONPATH: /app/src
       ports:
         - "5555:5555"
       depends_on:
@@ -89,7 +89,7 @@ services:
   redis:
     image: redis:8
     container_name: redis
-    command: ["redis-server", "--bind", "127.0.0.1", "--requirepass", "${APP_CONFIG__REDIS__PASSWORD}"]
+    command: ["redis-server", "--requirepass", "${APP_CONFIG__REDIS__PASSWORD}"]
     restart: unless-stopped
     ports:
       - "6379:6379"
