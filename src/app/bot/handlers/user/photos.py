@@ -74,6 +74,12 @@ async def handle_category_selection(callback: CallbackQuery, state: FSMContext):
     redis_key = data.get("receipt_key")
     category = callback.data.split(":", 1)[1]
 
+    if not redis_key or not await async_redis_client.exists(redis_key):
+        await state.clear()
+        await callback.message.answer(
+            "⏰ Время на ввод категории истекло. Возможно чек уже внесен в категорию Общие либо загрузите фото заново."
+        )
+        return
     await async_redis_client.hset(redis_key, "category", category)
     # Обработка выбранной категории
     await callback.message.answer(
