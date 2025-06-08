@@ -70,12 +70,16 @@ async def handle_photo(msg: Message, state: FSMContext):
     F.data.startswith("select_cat:"),
 )
 async def handle_category_selection(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    redis_key = data.get("receipt_key")
     category = callback.data.split(":", 1)[1]
+
+    await async_redis_client.hset(redis_key, "category", category)
     # Обработка выбранной категории
     await callback.message.answer(
-        f"✅ Категория выбрана: {category}\n🗳 Обрабатываю данные..."
+        f"Выбрана категория: {category}\n🗳 Обрабатываю данные..."
     )
-    await state.clear()  # или переход в следующее состояние
+    await state.clear()
 
 
 # @router.callback_query(F.data == "new_cat")
