@@ -52,11 +52,27 @@ services:
 #      pg:
 #        condition: service_healthy
 
-  celery:
+  celery-1:
     build:
       context: ./
       dockerfile: ./docker-build/app/Dockerfile
-    command: celery -A app.celery.celery_app worker --pool=threads --loglevel=info -Q high,low -c 1
+    command: celery -A app.celery.celery_app worker --pool=threads --loglevel=info -c 1
+    volumes:
+      - .:/app
+      - shared-data:/app/shared
+    working_dir:
+      /app
+    environment:
+      - PYTHONPATH=/app/src
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  celery-2:
+    build:
+      context: ./
+      dockerfile: ./docker-build/app/Dockerfile
+    command: celery -A app.celery.celery_app worker --pool=threads --loglevel=info -c 1
     volumes:
       - .:/app
       - shared-data:/app/shared

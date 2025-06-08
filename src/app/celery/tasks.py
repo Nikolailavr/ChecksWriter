@@ -71,7 +71,7 @@ def success_check(data: dict):
         redis_client.delete(f"receipt:{filename}")
 
 
-@celery_app.task(queue="high")
+@celery_app.task()
 def failure_check(filename: str):
     from app.bot.main import send_msg
 
@@ -105,7 +105,7 @@ def failure_check(filename: str):
         redis_client.delete(f"receipt:{filename}")
 
 
-@celery_app.task(bind=True, queue="low")
+@celery_app.task(bind=True)
 def process_check(self, filename: str):
     """Задача Celery для обработки чека"""
     try:
