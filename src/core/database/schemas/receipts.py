@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
+import re
 
 
 class ReceiptItemSchema(BaseModel):
@@ -19,6 +20,16 @@ class MetadataSchema(BaseModel):
     address: Optional[str] = None
     subtype: Optional[str] = None
     receive_date: Optional[datetime] = Field(None, alias="receiveDate")
+    
+    @validator('address')
+    def clean_address(cls, v):
+        if v is None:
+            return v
+        # Заменяем повторяющиеся запятые на одну
+        cleaned = re.sub(r',+', ',', v)
+        # Убираем запятые в начале и в конце строки
+        cleaned = cleaned.strip(',')
+        return cleaned
 
 
 class ReceiptSchema(BaseModel):
