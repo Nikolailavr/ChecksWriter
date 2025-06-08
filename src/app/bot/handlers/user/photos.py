@@ -60,6 +60,10 @@ async def handle_photo(msg: Message, state: FSMContext):
     logger.info(f"Сохраняем файл: {filepath}")
     await msg.bot.download_file(file.file_path, filepath)
 
+    # Запускаем обработку чека
+    task = process_check.delay(filename)
+    logger.info(f"Обработка запущена (ID задачи: {task.id})")
+
 
 @router.callback_query(
     StateFilter(ReceiptUploadState.waiting_for_category),

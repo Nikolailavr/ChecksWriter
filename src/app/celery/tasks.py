@@ -126,8 +126,6 @@ def process_check(self, filename: str):
             f"Общая ошибка при обработке {filename}: {e}, попытка {self.request.retries + 1} из {self.max_retries}"
         )
         self.retry(exc=e, countdown=5, max_retries=2)
-    finally:
-        remove_file(filename)
 
 
 def remove_file(filename: str):
@@ -141,6 +139,7 @@ def remove_file(filename: str):
 @task_success.connect
 def task_success_handler(sender=None, result=None, **kwargs):
     logger.info(f"✅ Задача '{sender.name}' выполнена успешно")
+    remove_file(result.get("filename"))
 
 
 # Ошибка при выполнении задачи
