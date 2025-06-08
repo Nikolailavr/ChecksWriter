@@ -137,7 +137,7 @@ class Parser:
             time.sleep(2)
 
             logger.info("Ждем появления кнопки загрузки")
-            save_dropdown = WebDriverWait(self.driver, 30).until(
+            save_dropdown = WebDriverWait(self.driver, 20).until(
                 EC.element_to_be_clickable(
                     (
                         By.CSS_SELECTOR,
