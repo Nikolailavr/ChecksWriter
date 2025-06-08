@@ -61,15 +61,19 @@ async def handle_photo(msg: Message, state: FSMContext):
     await msg.bot.download_file(file.file_path, filepath)
 
 
-@router.callback_query(
-    StateFilter(ReceiptUploadState.waiting_for_category),
-    F.data.startswith("select_cat:")
-)
+# @router.callback_query(
+#     StateFilter(ReceiptUploadState.waiting_for_category),
+#     F.data.startswith("select_cat:"),
+# )
+@router.callback_query(ReceiptUploadState.waiting_for_category)
 async def handle_category_selection(callback: CallbackQuery, state: FSMContext):
     category = callback.data.split(":", 1)[1]
     # Обработка выбранной категории
-    await callback.message.answer(f"✅ Категория выбрана: {category}\n🗳 Обрабатываю данные...")
+    await callback.message.answer(
+        f"✅ Категория выбрана: {category}\n🗳 Обрабатываю данные..."
+    )
     await state.clear()  # или переход в следующее состояние
+
 
 @router.callback_query(F.data == "new_cat")
 async def handle_new_category(callback: CallbackQuery, state: FSMContext):

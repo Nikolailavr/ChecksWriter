@@ -50,7 +50,13 @@ def success_check(data: dict):
         if category:
             text += f" в категорию {category}"
         logger.info(f"Отправка сообщения: {text}")
-        cel_helper.run(send_msg(chat_id=telegram_id, text=text, message_id=message_id,))
+        cel_helper.run(
+            send_msg(
+                chat_id=telegram_id,
+                text=text,
+                message_id=message_id,
+            )
+        )
     else:
         text = f"✅ Данные чека внесены в категорию {category}"
         logger.info(f"Отправка сообщения: {text}")

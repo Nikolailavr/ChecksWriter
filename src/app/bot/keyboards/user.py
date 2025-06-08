@@ -148,13 +148,12 @@ def build_category_keyboard_change(
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
-
 def build_category_keyboard(categories: list[str]) -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton(text=cat, callback_data=f"select_cat:{cat}")]
         for cat in categories
     ]
-    keyboard.append([
-        InlineKeyboardButton(text="➕ Новая категория", callback_data="new_cat")
-    ])
+    keyboard.append(
+        [InlineKeyboardButton(text="➕ Новая категория", callback_data="new_cat")]
+    )
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
