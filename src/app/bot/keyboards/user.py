@@ -143,7 +143,7 @@ def build_category_keyboard_change(
         ]
     )
     keyboard.append(
-        [InlineKeyboardButton(text="🔙 Назад", callback_data=f"view:{receipt_id}")]
+        [InlineKeyboardButton(text="🔙 Назад", callback_data=f"receipt:{receipt_id}")]
     )
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
