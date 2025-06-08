@@ -3,13 +3,16 @@ import os
 import uuid
 
 from aiogram import F, Dispatcher, Router
+from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 
+from app.bot.keyboards.user import build_category_keyboard
 from app.celery.tasks import process_check
 from core import settings
 from core.redis import async_redis_client
+from core.services.receipts import ReceiptService
 
 IMAGE_FOLDER = settings.uploader.DIR
 
@@ -19,6 +22,7 @@ router = Router()
 
 class ReceiptUploadState(StatesGroup):
     waiting_for_category = State()
+    entering_new_category = State()
 
 
 @router.message(F.photo)
@@ -28,9 +32,6 @@ async def handle_photo(msg: Message, state: FSMContext):
     filename = f"{uuid.uuid4()}.jpg"
     filepath = os.path.join(IMAGE_FOLDER, filename)
 
-    logger.info(f"Сохраняем файл: {filepath}")
-    await msg.bot.download_file(file.file_path, filepath)
-
     # Сохраняем в Redis
     redis_key = f"receipt:{filename}"
     await async_redis_client.hset(
@@ -38,20 +39,45 @@ async def handle_photo(msg: Message, state: FSMContext):
         mapping={
             "telegram_id": msg.from_user.id,
             "category": "Общие",
+            "message_id": msg.message_id,
         },
     )
     await async_redis_client.expire(redis_key, 600)
 
-    # Устанавливаем состояние и временные данные
     await state.set_state(ReceiptUploadState.waiting_for_category)
     await state.update_data(receipt_key=redis_key)
 
-    task = process_check.delay(filename)
-    logger.info(f"Обработка запущена (ID задачи: {task.id})")
-    await msg.answer("Введите название категории для этого чека:")
+    # Получаем категории
+    categories = await ReceiptService.get_categories(msg.from_user.id)
+    keyboard = build_category_keyboard(categories)
+
+    # Отправляем сообщение с клавиатурой
+    await msg.answer(
+        "Введите категорию для этого чека или выберите из списка:",
+        reply_markup=keyboard,
+    )
+
+    logger.info(f"Сохраняем файл: {filepath}")
+    await msg.bot.download_file(file.file_path, filepath)
 
 
-@router.message(ReceiptUploadState.waiting_for_category)
+@router.callback_query(
+    StateFilter(ReceiptUploadState.waiting_for_category),
+    F.data.startswith("select_cat:")
+)
+async def handle_category_selection(callback: CallbackQuery, state: FSMContext):
+    category = callback.data.split(":", 1)[1]
+    # Обработка выбранной категории
+    await callback.message.answer(f"✅ Категория выбрана: {category}\n🗳 Обрабатываю данные...")
+    await state.clear()  # или переход в следующее состояние
+
+@router.callback_query(F.data == "new_cat")
+async def handle_new_category(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer("Введите название новой категории:")
+    await state.set_state(ReceiptUploadState.entering_new_category)
+
+
+@router.message(ReceiptUploadState.entering_new_category)
 async def handle_category(msg: Message, state: FSMContext):
     data = await state.get_data()
     redis_key = data.get("receipt_key")
@@ -67,7 +93,7 @@ async def handle_category(msg: Message, state: FSMContext):
     await async_redis_client.hset(redis_key, "category", category)
 
     await state.clear()
-    await msg.answer("🗳 Обрабатываю данные...")
+    await msg.answer(f"✅ Категория выбрана: {category}\n🗳 Обрабатываю данные...")
 
 
 def register_users_photos_handlers(dp: Dispatcher) -> None:

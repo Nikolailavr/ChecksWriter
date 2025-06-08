@@ -76,7 +76,7 @@ class ReceiptRepository:
             await self.session.rollback()
             raise e
 
-    async def get(self, telegram_id: int, category: str = None) -> list[Receipt]:
+    async def get(self, telegram_id: int, category: str = None) -> list[Receipt] | list[str]:
         try:
             if category:
                 stmt = (

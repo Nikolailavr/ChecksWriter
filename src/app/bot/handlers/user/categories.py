@@ -10,7 +10,7 @@ from aiogram.types import CallbackQuery, Message, BufferedInputFile
 from app.bot.keyboards.user import (
     show_categories,
     show_receipts,
-    build_category_keyboard,
+    build_category_keyboard_change,
 )
 from core.services.receipts import ReceiptService
 
@@ -58,7 +58,7 @@ async def handle_change_category(callback: CallbackQuery, state: FSMContext):
 
     await callback.message.edit_text(
         "🔽 Выберите новую категорию:",
-        reply_markup=build_category_keyboard(receipt_id, categories),
+        reply_markup=build_category_keyboard_change(receipt_id, categories),
     )
 
 

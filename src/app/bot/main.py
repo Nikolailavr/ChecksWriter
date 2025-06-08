@@ -16,8 +16,9 @@ dp = Dispatcher(storage=MemoryStorage())
 async def send_msg(
     chat_id: int,
     text: str,
+    message_id: int = None,
 ):
-    await bot.send_message(chat_id=chat_id, text=text)
+    await bot.send_message(chat_id=chat_id, text=text, reply_to_message_id=message_id)
 
 
 async def start_bot():

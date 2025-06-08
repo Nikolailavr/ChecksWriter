@@ -23,6 +23,7 @@ def success_check(data: dict):
     filename = data.get("filename")
     category = None
     telegram_id = None
+    message_id = None
     try:
         logger.info(f"Забираем данные из redis для файла: {filename}")
         user_data = redis_client.hgetall(f"receipt:{filename}")
@@ -31,7 +32,8 @@ def success_check(data: dict):
             logger.warning(f"Данные для receipt:{filename} не найдены в Redis.")
             return
 
-        telegram_id_str = user_data.get("telegram_id")  # Безопасное извлечение
+        telegram_id_str = user_data.get("telegram_id")
+        message_id = user_data.get("message_id")
         if telegram_id_str:
             telegram_id = int(telegram_id_str)
         logger.info("Сохраняем в Postgres")
@@ -48,7 +50,7 @@ def success_check(data: dict):
         if category:
             text += f" в категорию {category}"
         logger.info(f"Отправка сообщения: {text}")
-        cel_helper.run(send_msg(chat_id=telegram_id, text=text))
+        cel_helper.run(send_msg(chat_id=telegram_id, text=text, message_id=message_id,))
     else:
         text = f"✅ Данные чека внесены в категорию {category}"
         logger.info(f"Отправка сообщения: {text}")
@@ -56,6 +58,7 @@ def success_check(data: dict):
             send_msg(
                 chat_id=telegram_id,
                 text=text,
+                message_id=message_id,
             )
         )
     finally:
@@ -72,6 +75,7 @@ def failure_check(filename: str):
         if not user_data:
             logger.warning(f"Данные для receipt:{filename} не найдены в Redis.")
             return
+        message_id = user_data.get("message_id")
         chat_id_str = user_data.get("telegram_id")
         if chat_id_str:
             chat_id = int(chat_id_str)
@@ -82,6 +86,7 @@ def failure_check(filename: str):
                 send_msg(
                     chat_id=chat_id,
                     text=f"❌ Ошибка, не удалось распознать файл!",
+                    message_id=message_id,
                 )
             )
         else:
@@ -107,9 +112,9 @@ def process_check(self, filename: str):
     except FileNotFoundError as e:
         logger.warning(f"Файл {filename} не найден парсером: {e}")
         raise
-    except BadQRCodeError as e:
-        logger.warning(f"Не удалось распознать QR-код для {filename}: {e}")
-        raise
+    # except BadQRCodeError as e:
+    #     logger.warning(f"Не удалось распознать QR-код для {filename}: {e}")
+    #     raise
     except Exception as e:
         logger.error(
             f"Общая ошибка при обработке {filename}: {e}, попытка {self.request.retries + 1} из {self.max_retries}"
