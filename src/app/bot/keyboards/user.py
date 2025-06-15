@@ -131,29 +131,32 @@ def build_category_keyboard_change(
     receipt_id: str,
     categories: list[str],
 ) -> InlineKeyboardMarkup:
+    # Формируем кнопки по 2 в строку
     keyboard = [
-        [InlineKeyboardButton(text=cat, callback_data=f"set_cat:{receipt_id}:{cat}")]
-        for cat in categories
-    ]
-    keyboard.append(
         [
-            InlineKeyboardButton(
-                text="➕ Новая категория", callback_data=f"new_cat:{receipt_id}"
-            )
-        ]
-    )
-    keyboard.append(
-        [InlineKeyboardButton(text="🔙 Назад", callback_data=f"receipt:{receipt_id}")]
-    )
+            InlineKeyboardButton(text=cat1, callback_data=f"set_cat:{receipt_id}:{cat1}"),
+            InlineKeyboardButton(text=cat2, callback_data=f"set_cat:{receipt_id}:{cat2}")
+        ] if cat2 else [InlineKeyboardButton(text=cat1, callback_data=f"set_cat:{receipt_id}:{cat1}")]
+        for cat1, cat2 in zip(categories[::2], categories[1::2] + [None] if len(categories) % 2 else categories[1::2])
+    ]
+    keyboard.append([
+        InlineKeyboardButton(text="➕ Новая категория", callback_data=f"new_cat:{receipt_id}")
+    ])
+    keyboard.append([
+        InlineKeyboardButton(text="🔙 Назад", callback_data=f"receipt:{receipt_id}")
+    ])
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
 def build_category_keyboard(categories: list[str]) -> InlineKeyboardMarkup:
     keyboard = [
-        [InlineKeyboardButton(text=cat, callback_data=f"select_cat:{cat}")]
-        for cat in categories
+        [
+            InlineKeyboardButton(text=cat1, callback_data=f"select_cat:{cat1}"),
+            InlineKeyboardButton(text=cat2, callback_data=f"select_cat:{cat2}")
+        ] if cat2 else [InlineKeyboardButton(text=cat1, callback_data=f"select_cat:{cat1}")]
+        for cat1, cat2 in zip(categories[::2], categories[1::2] + [None] if len(categories) % 2 else categories[1::2])
     ]
-    keyboard.append(
-        [InlineKeyboardButton(text="➕ Новая категория", callback_data="new_cat")]
-    )
+    keyboard.append([
+        InlineKeyboardButton(text="➕ Новая категория", callback_data="new_cat")
+    ])
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
