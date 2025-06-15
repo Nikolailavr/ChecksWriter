@@ -68,37 +68,37 @@ services:
       - redis
     restart: unless-stopped
 
-  celery-2:
-    build:
-      context: ./
-      dockerfile: ./docker-build/app/Dockerfile
-    command: celery -A app.celery.celery_app worker --pool=threads --loglevel=info -c 1
-    volumes:
-      - .:/app
-      - shared-data:/app/shared
-    working_dir:
-      /app
-    environment:
-      - PYTHONPATH=/app/src
-    depends_on:
-      - redis
-    restart: unless-stopped
+#  celery-2:
+#    build:
+#      context: ./
+#      dockerfile: ./docker-build/app/Dockerfile
+#    command: celery -A app.celery.celery_app worker --pool=threads --loglevel=info -c 1
+#    volumes:
+#      - .:/app
+#      - shared-data:/app/shared
+#    working_dir:
+#      /app
+#    environment:
+#      - PYTHONPATH=/app/src
+#    depends_on:
+#      - redis
+#    restart: unless-stopped
 
-  celery-3:
-    build:
-      context: ./
-      dockerfile: ./docker-build/app/Dockerfile
-    command: celery -A app.celery.celery_app worker --pool=threads --loglevel=info -c 1
-    volumes:
-      - .:/app
-      - shared-data:/app/shared
-    working_dir:
-      /app
-    environment:
-      - PYTHONPATH=/app/src
-    depends_on:
-      - redis
-    restart: unless-stopped
+#  celery-3:
+#    build:
+#      context: ./
+#      dockerfile: ./docker-build/app/Dockerfile
+#    command: celery -A app.celery.celery_app worker --pool=threads --loglevel=info -c 1
+#    volumes:
+#      - .:/app
+#      - shared-data:/app/shared
+#    working_dir:
+#      /app
+#    environment:
+#      - PYTHONPATH=/app/src
+#    depends_on:
+#      - redis
+#    restart: unless-stopped
 
   flower:
       build:
@@ -116,8 +116,8 @@ services:
       depends_on:
         - redis
         - celery-1
-        - celery-2
-        - celery-3
+#        - celery-2
+#        - celery-3
       restart: unless-stopped
 
   redis:
