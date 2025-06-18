@@ -5,11 +5,11 @@ import re
 
 
 class ReceiptItemSchema(BaseModel):
-    nds: Optional[int]
-    sum: int
-    name: str
-    price: int
-    quantity: float
+    nds: Optional[int] = Field(0)
+    sum: int = Field(0)
+    name: str = Field("-")
+    price: int = Field(0)
+    quantity: float = Field(0)
     payment_type: Optional[int] = Field(None, alias="paymentType")
     product_type: Optional[int] = Field(None, alias="productType")
 
