@@ -148,3 +148,8 @@ services:
 volumes:
   pgdata:
   shared-data:
+
+networks:
+  default:
+    external:
+      name: shared_network
