@@ -4,6 +4,7 @@ services:
       dockerfile: ./docker-build/app/Dockerfile_bot
       context: ./
     restart: unless-stopped
+    container_name: checks_bot
     command: python3 main.py
     volumes:
       - shared-data:/app/shared
@@ -57,6 +58,7 @@ services:
     build:
       context: ./
       dockerfile: ./docker-build/app/Dockerfile
+    container_name: checks_celery_1
     command: celery -A app.celery.celery_app worker --pool=threads --loglevel=info -c 1
     volumes:
       - .:/app
@@ -105,6 +107,7 @@ services:
       build:
         context: .
         dockerfile: ./docker-build/app/Dockerfile_base
+      container_name: checks_flower
       command: celery -A app.celery.celery_app flower --port=5555 \
         --basic_auth=${APP_CONFIG__FLOWER__USER}:${APP_CONFIG__FLOWER__PASSWORD}
       volumes:
