@@ -31,12 +31,13 @@ services:
       POSTGRES_USER: ${APP_CONFIG__DB__USER}
       POSTGRES_PASSWORD: ${APP_CONFIG__DB__PASSWORD}
       PGDATA: /var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    env_file:
+      - ./src/.env
     volumes:
       - pgdata:/var/lib/postgresql/data
+#      - ./db/init:/docker-entrypoint-initdb.d  # папка со скриптами
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready" ]
+      test: ["CMD-SHELL", "pg_isready"]
       interval: 5s
       timeout: 3s
       retries: 3
