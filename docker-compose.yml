@@ -15,13 +15,6 @@ services:
     depends_on:
       pg:
         condition: service_healthy
-#    develop:
-#      watch:
-#        - action: sync+restart
-#          path: ./src
-#          target: /app
-#        - action: rebuild
-#          path: ./poetry.lock
 
   pg:
     image: postgres:16.9
@@ -69,7 +62,8 @@ services:
     environment:
       - PYTHONPATH=/app/src
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
 #  celery-2:
@@ -85,7 +79,8 @@ services:
 #    environment:
 #      - PYTHONPATH=/app/src
 #    depends_on:
-#      - redis
+#      redis:
+#        condition: service_healthy
 #    restart: unless-stopped
 
 #  celery-3:
@@ -101,7 +96,8 @@ services:
 #    environment:
 #      - PYTHONPATH=/app/src
 #    depends_on:
-#      - redis
+#      redis:
+#        condition: service_healthy
 #    restart: unless-stopped
 
   flower:
@@ -119,10 +115,8 @@ services:
       ports:
         - "5555:5555"
       depends_on:
-        - redis
-        - celery-1
-#        - celery-2
-#        - celery-3
+        - redis:
+            condition: service_healthy
       restart: unless-stopped
 
   redis:
@@ -145,6 +139,11 @@ services:
       - ../data:/data   # сохраняем данные на хост
     ports:
       - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
   pgdata:
