@@ -24,6 +24,7 @@ services:
 
   pg:
     image: postgres:16.9
+    container_name: pg
     environment:
       POSTGRES_DB: ${APP_CONFIG__DB__NAME}
       POSTGRES_USER: ${APP_CONFIG__DB__USER}
