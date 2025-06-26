@@ -1,0 +1,56 @@
+services:
+  pg:
+    image: postgres:16.9
+    container_name: pg
+    environment:
+      POSTGRES_DB: ${APP_CONFIG__DB__NAME}
+      POSTGRES_USER: ${APP_CONFIG__DB__USER}
+      POSTGRES_PASSWORD: ${APP_CONFIG__DB__PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+    env_file:
+      - ./src/.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+#      - ./db/init:/docker-entrypoint-initdb.d  # папка со скриптами
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+  redis:
+    image: redis:8
+    container_name: redis
+    command:
+      - redis-server
+      - --save 900 1
+      - --save 300 10
+      - --save 60 10000
+      - --appendonly yes
+      - --appendfilename appendonly.aof
+      - --appendfsync everysec
+      - --dir /data
+      - --requirepass ${APP_CONFIG__REDIS__PASSWORD}
+    restart: unless-stopped
+    env_file:
+      - ./src/.env
+    volumes:
+      - ../data:/data   # сохраняем данные на хост
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:
+
+networks:
+  default:
+    external:
+      name: shared_network
