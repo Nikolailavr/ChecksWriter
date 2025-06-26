@@ -46,14 +46,14 @@ class ParseJSON:
 
 class Parser:
     def __init__(self):
-        self.driver = None
-        self.download_dir = None
+        self._driver = None
+        self._download_dir = None
 
     def check(self, filename: str):
-        self.download_dir = tempfile.mkdtemp()
-        if self.driver is None:
+        self._download_dir = tempfile.mkdtemp()
+        if self._driver is None:
             self._driver_run()
-        if not self.driver:
+        if not self._driver:
             logger.error("Driver not initialized. Skipping check.")
             return
         if Path(settings.uploader.DIR / filename).exists():
@@ -64,19 +64,19 @@ class Parser:
         logger.info(f"Start checking file={filename}")
         try:
             self._get_by_photo(filename)
-            return ParseJSON(self.download_dir).parse_json()
+            return ParseJSON(self._download_dir).parse_json()
         finally:
-            if self.driver is not None:
-                self.driver.quit()
+            if self._driver is not None:
+                self._driver.quit()
             # Удаляем временную папку с файлами
-            shutil.rmtree(self.download_dir, ignore_errors=True)
+            shutil.rmtree(self._download_dir, ignore_errors=True)
 
     def _driver_run(self):
         try:
             options = uc.ChromeOptions()
             # Создаём временную папку для скачивания
             prefs = {
-                "download.default_directory": self.download_dir,
+                "download.default_directory": self._download_dir,
                 "download.prompt_for_download": False,
                 "download.directory_upgrade": True,
                 "safebrowsing.enabled": True,
@@ -96,20 +96,20 @@ class Parser:
                 use_subprocess=True,
                 version_main=None,  # отключает автоопределение версии
             )
-            self.driver.implicitly_wait(5)
-            self.driver.set_page_load_timeout(120)
+            self._driver.implicitly_wait(5)
+            self._driver.set_page_load_timeout(120)
         except Exception as ex:
             logger.exception("Error in run driver")
-            self.driver = None
+            self._driver = None
             raise ex
 
     def _get_by_photo(self, filename: str = "image.jpg"):
         try:
-            self.driver.get(settings.parser.main_url)
+            self._driver.get(settings.parser.main_url)
 
             # Ожидаем и кликаем вкладку "Фото"
             logger.info('Ожидаем и кликаем вкладку "Фото"')
-            photo_tab = WebDriverWait(self.driver, 10).until(
+            photo_tab = WebDriverWait(self._driver, 10).until(
                 EC.element_to_be_clickable(
                     (By.CSS_SELECTOR, 'a[href="#b-checkform_tab-qrfile"]')
                 )
@@ -119,7 +119,7 @@ class Parser:
 
             # Находим элемент input типа file
             logger.info("Находим элемент input типа file")
-            file_input = WebDriverWait(self.driver, 10).until(
+            file_input = WebDriverWait(self._driver, 10).until(
                 EC.presence_of_element_located(
                     (By.CSS_SELECTOR, "input.b-checkform_qrfile[type='file']")
                 )
@@ -135,13 +135,13 @@ class Parser:
 
             # Скроллим до середины страницы
             logger.info("Скроллим до конца страницы")
-            self.driver.execute_script(
+            self._driver.execute_script(
                 "window.scrollTo(0, document.body.scrollHeight);"
             )
             time.sleep(2)
 
             logger.info("Ждем появления кнопки загрузки")
-            save_dropdown = WebDriverWait(self.driver, 20).until(
+            save_dropdown = WebDriverWait(self._driver, 20).until(
                 EC.element_to_be_clickable(
                     (
                         By.CSS_SELECTOR,
@@ -154,10 +154,10 @@ class Parser:
 
             # Сохраняем в JSON
             logger.info("Сохраняем в JSON")
-            json_button = WebDriverWait(self.driver, 10).until(
+            json_button = WebDriverWait(self._driver, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "a.b-check_btn-json"))
             )
-            self.driver.execute_script("arguments[0].click();", json_button)
+            self._driver.execute_script("arguments[0].click();", json_button)
             time.sleep(2)
 
         except Exception as ex:
