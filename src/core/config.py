@@ -53,6 +53,7 @@ class Telegram(BaseModel):
 
 class Parser(BaseModel):
     main_url: str = "https://proverkacheka.com/"
+    driver_path: str = BASE_DIR / "chrome/chromedriver"
 
 
 class Uploader(BaseModel):

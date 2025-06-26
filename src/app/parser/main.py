@@ -90,7 +90,12 @@ class Parser:
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
 
-            self.driver = uc.Chrome(options=options)
+            self._driver = uc.Chrome(
+                options=options,
+                driver_executable_path=settings.parser.driver_path,
+                use_subprocess=True,
+                version_main=None,  # отключает автоопределение версии
+            )
             self.driver.implicitly_wait(5)
             self.driver.set_page_load_timeout(120)
         except Exception as ex:
