@@ -7,7 +7,7 @@ WORKDIR /src
 
 # Устанавливаем системные зависимости для Chromium
 RUN apt-get update && apt-get install -y \
-    chromium \
+    chromium=137.* \
     chromium-driver \
     fonts-liberation \
     libasound2 \
