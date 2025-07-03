@@ -17,7 +17,7 @@ services:
     build:
       context: ./
       dockerfile: ./docker-build/app/Dockerfile
-    container_name: checks_celery_1
+    container_name: checks_celery
     command: celery -A app.celery.celery_app worker --pool=threads --loglevel=info -c 1
     volumes:
       - .:/app
