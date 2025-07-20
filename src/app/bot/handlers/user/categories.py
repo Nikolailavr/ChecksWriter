@@ -133,7 +133,7 @@ async def export_category_receipts(callback: CallbackQuery):
                     date_str,
                     time_str,
                     item.name,
-                    item.quantity,
+                    f"{item.quantity}".replace(".", ","),
                     f"{item.price / 100:.2f}".replace(".", ","),
                     f"{item.sum / 100:.2f}".replace(".", ","),
                     receipt.retail_place or "",
