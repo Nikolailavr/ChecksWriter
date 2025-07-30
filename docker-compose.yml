@@ -41,7 +41,7 @@ services:
       environment:
         PYTHONPATH: /app/src
       ports:
-        - "5555:5555"
+        - "8443:5555"
       restart: unless-stopped
 
 volumes:
