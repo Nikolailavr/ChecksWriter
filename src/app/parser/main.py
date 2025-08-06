@@ -238,13 +238,9 @@ class Parser:
                 # Увеличиваем окно браузера под блок (добавляем немного отступа)
                 self._driver.set_window_size(width + 50, height + 300)
 
-                # Скроллим к блоку и чуть ниже, чтобы реклама ушла
+                # Скроллим к блоку
                 self._driver.execute_script(
-                    """
-                    arguments[0].scrollIntoView(true);
-                    window.scrollBy(0, 10);  // прокрутка чуть ниже
-                """,
-                    check_block,
+                    "arguments[0].scrollIntoView(true);", check_block
                 )
 
                 # Скриншот
