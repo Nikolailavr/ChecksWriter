@@ -242,7 +242,7 @@ class Parser:
                 self._driver.execute_script(
                     """
                     arguments[0].scrollIntoView(true);
-                    window.scrollBy(0, 40);  // прокрутка чуть ниже
+                    window.scrollBy(0, 10);  // прокрутка чуть ниже
                 """,
                     check_block,
                 )
