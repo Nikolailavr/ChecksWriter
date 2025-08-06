@@ -236,7 +236,7 @@ class Parser:
                 height = size["height"]
 
                 # Увеличиваем окно браузера под блок (добавляем немного отступа)
-                self._driver.set_window_size(width + 50, height + 200)
+                self._driver.set_window_size(width + 50, height + 300)
 
                 # Скроллим к блоку и чуть ниже, чтобы реклама ушла
                 self._driver.execute_script(
