@@ -233,7 +233,7 @@ class Parser:
                 # Получаем размеры блока
                 size = check_block.size
                 width = size["width"]
-                height = size["height"]
+                height = size["height"] + 100
 
                 # Увеличиваем окно браузера под блок (добавляем немного отступа)
                 self._driver.set_window_size(width + 50, height + 200)
