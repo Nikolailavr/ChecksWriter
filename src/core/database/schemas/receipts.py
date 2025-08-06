@@ -66,7 +66,6 @@ class ReceiptSchema(BaseModel):
     fiscal_document_number: int = Field(..., alias="fiscalDocumentNumber")
     fiscal_document_format_ver: int = Field(..., alias="fiscalDocumentFormatVer")
 
-
 class ReceiptDBSchema(BaseModel):
     user_id: int = None
     category: str = None
@@ -82,3 +81,19 @@ class ReceiptDBSchema(BaseModel):
     cash_total_sum: Optional[int] = 0
     provision_sum: Optional[int] = 0
     ecash_total_sum: Optional[int] = 0
+    fiscal_drive_number: str = None
+    fiscal_document_number: int = None
+    fiscal_sign: int = None
+    operation_type: int = None
+
+    def to_qr_string(self) -> str:
+        """
+        Формирует строку для QR-кода по стандарту ФНС.
+        """
+        t = self.date_time.strftime("%Y%m%dT%H%M")
+        s = f"{self.total_sum / 100:.2f}"
+        fn = self.fiscal_drive_number
+        i = self.fiscal_document_number
+        fp = self.fiscal_sign
+        n = self.operation_type
+        return f"t={t}&s={s}&fn={fn}&i={i}&fp={fp}&n={n}"

@@ -1,12 +1,12 @@
-import csv
-import io
 import logging
 
 from aiogram import F, Router, Dispatcher
 from aiogram.types import CallbackQuery, BufferedInputFile
 
 from app.bot.keyboards.user import show_receipts, build_receipt_action_keyboard
+from core.redis import async_redis_client
 from core.services.receipts import ReceiptService
+from app.celery.tasks import download_receipt
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -62,6 +62,28 @@ async def delete_receipt(callback: CallbackQuery):
     await ReceiptService.delete_receipt(receipt_id)
     await callback.message.edit_text("✅ Чек удалён.")
     await callback.answer()
+
+@router.callback_query(F.data.startswith("download:"))
+async def download_receipt_handler(callback: CallbackQuery):
+    receipt_id = callback.data.split(":")[1]
+
+    # Получаем чек из БД
+    receipt = await ReceiptService.get_receipt(receipt_id)
+    if not receipt:
+        await callback.answer("Чек не найден", show_alert=True)
+        return
+    qr_data = receipt.to_qr_string()
+    await async_redis_client.hset(
+        receipt.receipt_id,
+        mapping={
+            "telegram_id": callback.from_user.id,
+            "message_id": callback.message_id,
+            "qr_data": qr_data,
+        },
+    )
+    download_receipt.delay(receipt.receipt_id)
+    await callback.answer("Загрузка начата...")
+
 
 
 def register_users_receipts_handlers(dp: Dispatcher) -> None:

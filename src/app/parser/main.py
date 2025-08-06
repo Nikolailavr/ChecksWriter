@@ -5,15 +5,18 @@ import os
 import shutil
 import tempfile
 import time
+import uuid
 from pathlib import Path
 
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 from app.parser.exceptions import BadQRCodeError
 from core import settings
+from core.redis import redis_client
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +73,26 @@ class Parser:
                 self._driver.quit()
             # Удаляем временную папку с файлами
             shutil.rmtree(self._download_dir, ignore_errors=True)
+
+    def download(self, receipt_id: str):
+        self._download_dir = tempfile.mkdtemp()
+        if self._driver is None:
+            self._driver_run()
+        if not self._driver:
+            logger.error("Driver not initialized. Skipping check.")
+            return {
+                "status": "error",
+            }
+        try:
+            receipt_data = redis_client.get(receipt_id)
+            qr_data = receipt_data.get("qr_data")
+            return self._get_by_qr_data(qr_data)
+        except Exception as ex:
+            return {
+                "status": "error",
+                "exception": ex,
+            }
+
 
     def _driver_run(self):
         try:
@@ -163,3 +186,46 @@ class Parser:
         except Exception as ex:
             logger.error(f"Ошибка при обработке чека: {str(ex)}")
             raise BadQRCodeError
+
+    def _get_by_qr_data(self, data: str, max_retries: int = 2, wait_timeout: int = 10):
+        self._driver.get(settings.parser.main_url)
+
+        logger.info('Ожидаем и кликаем вкладку "Строка"')
+        tab = WebDriverWait(self._driver, 5).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[href="#b-checkform_tab-qrraw"]'))
+        )
+        tab.click()
+
+        logger.info("Ожидаем поле для ввода QR-строки")
+        textarea = WebDriverWait(self._driver, 5).until(
+            EC.visibility_of_element_located((By.ID, "b-checkform_qrraw"))
+        )
+
+        logger.info("Очищаем и заполняем данные: %s", data)
+        textarea.clear()
+        textarea.send_keys(data)
+
+        logger.info("Ожидаем кнопку 'Проверить' и кликаем")
+        submit_button = WebDriverWait(self._driver, 5).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, ".b-checkform_btn-send"))
+        )
+        for attempt in range(max_retries):
+            submit_button.click()
+            try:
+                # Ждем появления блока с чеком
+                check_block = WebDriverWait(self._driver, wait_timeout).until(
+                    EC.visibility_of_element_located((By.CSS_SELECTOR, ".b-check_table-place"))
+                )
+                # Скриншот области
+                filename = self._download_dir / f"{uuid.uuid4()}.jpeg"
+                check_block.screenshot(filename)
+
+                return {
+                    "status": "success",
+                    "filename": filename,
+                }
+
+            except TimeoutException:
+                logger.warning(f"Попытка {attempt + 1}: блок с чеком не появился, повторяем нажатие кнопки")
+
+        raise Exception("Не удалось получить чек после нескольких попыток")

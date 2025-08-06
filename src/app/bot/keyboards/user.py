@@ -112,6 +112,11 @@ def build_receipt_action_keyboard(receipt_id: str) -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(
+                    text="⬇ Скачать", callback_data=f"download:{receipt_id}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
                     text="❌ Удалить", callback_data=f"delete:{receipt_id}"
                 )
             ],
@@ -124,6 +129,7 @@ def build_receipt_action_keyboard(receipt_id: str) -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="🔙 Назад", callback_data="cats:0")],
         ]
     )
+
 
 
 # --- Кнопки выбора категории ---

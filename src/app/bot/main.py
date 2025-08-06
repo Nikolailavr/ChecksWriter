@@ -4,6 +4,7 @@ import os
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import FSInputFile
 from app.bot.handlers import register_all_handlers
 from core import settings
 
@@ -20,6 +21,9 @@ async def send_msg(
 ):
     await bot.send_message(chat_id=chat_id, text=text, reply_to_message_id=message_id)
 
+async def send_image(chat_id: int, image_path: str):
+    photo = FSInputFile(image_path)
+    await bot.send_photo(chat_id, photo)
 
 async def start_bot():
     # Создаем папку для изображений, если ее нет

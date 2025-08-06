@@ -128,6 +128,27 @@ def process_check(self, filename: str):
         self.retry(exc=e, countdown=5, max_retries=2)
 
 
+@celery_app.task
+def download_receipt(receipt_id: str):
+    try:
+        parser = Parser()
+        result = parser.download(receipt_id)
+        if result.get("status") == "success":
+            redis_data = redis_client.hgetall(receipt_id)
+            image_path = redis_data.get("filename")
+            chat_id_str = redis_data.get("telegram_id")
+            from app.bot.main import send_image
+            cel_helper.run(
+                send_image(
+                    chat_id=chat_id_str,
+                    image_path=image_path,
+                )
+            )
+    except:
+        ...
+
+
+
 def remove_file(filename: str):
     try:
         os.remove(os.path.abspath(settings.uploader.DIR / filename))
@@ -139,7 +160,8 @@ def remove_file(filename: str):
 @task_success.connect
 def task_success_handler(sender=None, result=None, **kwargs):
     logger.info(f"✅ Задача '{sender.name}' выполнена успешно")
-    remove_file(result.get("filename"))
+    if sender.name == "app.celery.tasks.process_check":
+        remove_file(result.get("filename"))
 
 
 # Ошибка при выполнении задачи
