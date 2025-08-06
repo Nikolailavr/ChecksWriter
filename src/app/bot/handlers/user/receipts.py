@@ -63,6 +63,7 @@ async def delete_receipt(callback: CallbackQuery):
     await callback.message.edit_text("✅ Чек удалён.")
     await callback.answer()
 
+
 @router.callback_query(F.data.startswith("download:"))
 async def download_receipt_handler(callback: CallbackQuery):
     receipt_id = callback.data.split(":")[1]
@@ -73,16 +74,16 @@ async def download_receipt_handler(callback: CallbackQuery):
         await callback.answer("Чек не найден", show_alert=True)
         return
     qr_data = receipt.to_qr_string()
+    redis_key = f"receipt_{receipt.receipt_id}"
     await async_redis_client.hset(
-        receipt.receipt_id,
+        redis_key,
         mapping={
             "telegram_id": callback.from_user.id,
             "qr_data": qr_data,
         },
     )
-    download_receipt.delay(receipt.receipt_id)
-    await callback.answer("Загрузка начата...")
-
+    download_receipt.delay(redis_key)
+    await callback.message.answer("Загрузка начата. Требуется несколько секунд...")
 
 
 def register_users_receipts_handlers(dp: Dispatcher) -> None:
