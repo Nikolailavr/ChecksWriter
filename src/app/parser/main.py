@@ -211,38 +211,57 @@ class Parser:
             EC.presence_of_element_located((By.ID, "b-checkform_tab-qrraw"))
         )
 
-        logger.info("Ожидаем кнопку 'Проверить' и кликаем")
+        logger.info("Ожидаем кнопку 'Проверить'")
         submit_button = WebDriverWait(parent_block, 10).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, "button.b-checkform_btn-send"))
         )
 
         for attempt in range(max_retries):
+            logger.info(
+                f"Нажимаем кнопку 'Проверить' (попытка {attempt+1}/{max_retries})"
+            )
             self._driver.execute_script("arguments[0].click();", submit_button)
+
             try:
-                # Ждем появления блока с чеком
+                logger.info("Ждем появления блока с чеком")
                 check_block = WebDriverWait(self._driver, wait_timeout).until(
                     EC.visibility_of_element_located(
                         (By.CSS_SELECTOR, ".b-check_table-place")
                     )
                 )
-                # Скриншот области
-                filename = f"{self._download_dir}/{uuid.uuid4()}.png"
-                check_block.screenshot(filename)
-                logger.info("Filename: %s", filename)
+
+                # Скроллим к блоку
+                logger.info("Скроллим к блоку с чеком")
+                self._driver.execute_script(
+                    "arguments[0].scrollIntoView(true);", check_block
+                )
+                self._driver.execute_script(
+                    "window.scrollTo(0, document.body.scrollHeight);"
+                )  # на всякий случай
+
+                # Скриншот
+                filename = Path(self._download_dir) / f"{uuid.uuid4()}.png"
+                check_block.screenshot(str(filename))
+                logger.info("Скриншот сохранен: %s", filename)
+
                 return {
                     "status": "success",
-                    "filename": filename,
+                    "filename": str(filename),
                 }
 
             except TimeoutException:
-                logger.warning(
-                    f"Попытка {attempt + 1}: блок с чеком не появился, повторяем нажатие кнопки"
-                )
+                logger.warning("Блок с чеком не появился, повторяем нажатие кнопки")
             except Exception as ex:
-                logger.error(ex)
-                raise ex
+                logger.exception("Ошибка при получении чека")
+                return {
+                    "status": "error",
+                    "exception": ex,
+                }
 
-        raise Exception("Не удалось получить чек после нескольких попыток")
+        return {
+            "status": "error",
+            "exception": "Не удалось получить чек после всех попыток",
+        }
 
     def __close_resources(self):
         logger.info("Закрытие ресурсов...")
