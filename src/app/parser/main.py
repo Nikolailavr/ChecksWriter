@@ -240,7 +240,7 @@ class Parser:
 
                 # Скроллим так, чтобы низ элемента оказался чуть выше края экрана
                 self._driver.execute_script(
-                    "window.scrollTo(0, arguments[0].offsetTop - 20);", check_block
+                    "window.scrollTo(0, arguments[0].offsetTop + 20);", check_block
                 )
 
                 # Скриншот
