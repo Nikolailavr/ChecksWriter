@@ -230,14 +230,18 @@ class Parser:
                     )
                 )
 
+                # Получаем размеры блока
+                size = check_block.size
+                width = size["width"]
+                height = size["height"]
+
+                # Увеличиваем окно браузера под блок (добавляем немного отступа)
+                self._driver.set_window_size(width + 50, height + 200)
+
                 # Скроллим к блоку
-                logger.info("Скроллим к блоку с чеком")
                 self._driver.execute_script(
                     "arguments[0].scrollIntoView(true);", check_block
                 )
-                self._driver.execute_script(
-                    "window.scrollTo(0, document.body.scrollHeight);"
-                )  # на всякий случай
 
                 # Скриншот
                 filename = Path(self._download_dir) / f"{uuid.uuid4()}.png"
