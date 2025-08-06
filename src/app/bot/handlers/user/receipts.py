@@ -77,7 +77,6 @@ async def download_receipt_handler(callback: CallbackQuery):
         receipt.receipt_id,
         mapping={
             "telegram_id": callback.from_user.id,
-            "message_id": callback.message_id,
             "qr_data": qr_data,
         },
     )
