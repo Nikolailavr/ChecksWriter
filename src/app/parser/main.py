@@ -240,12 +240,7 @@ class Parser:
 
                 # Скроллим так, чтобы низ элемента оказался чуть выше края экрана
                 self._driver.execute_script(
-                    """
-                    const el = arguments[0];
-                    el.scrollIntoView({block: 'end'});
-                    window.scrollBy(0,  -50);  // поднимаем на 50px, чтобы низ был виден, а реклама ушла
-                """,
-                    check_block,
+                    "window.scrollTo(0, arguments[0].offsetTop - 20);", check_block
                 )
 
                 # Скриншот
