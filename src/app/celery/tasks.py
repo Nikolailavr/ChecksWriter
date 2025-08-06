@@ -147,7 +147,7 @@ def download_receipt(receipt_id: str):
             redis_client.delete(receipt_id)
         return result
     except Exception as ex:
-        raise ex
+        return {"status": "error", "message": str(ex)}
 
 
 
