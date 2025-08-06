@@ -233,14 +233,19 @@ class Parser:
                 # Получаем размеры блока
                 size = check_block.size
                 width = size["width"]
-                height = size["height"] + 100
+                height = size["height"]
 
                 # Увеличиваем окно браузера под блок (добавляем немного отступа)
                 self._driver.set_window_size(width + 50, height + 200)
 
-                # Скроллим к блоку
+                # Скроллим так, чтобы низ элемента оказался чуть выше края экрана
                 self._driver.execute_script(
-                    "arguments[0].scrollIntoView(true);", check_block
+                    """
+                    const el = arguments[0];
+                    el.scrollIntoView({block: 'end'});
+                    window.scrollBy(0,  -50);  // поднимаем на 50px, чтобы низ был виден, а реклама ушла
+                """,
+                    check_block,
                 )
 
                 # Скриншот
