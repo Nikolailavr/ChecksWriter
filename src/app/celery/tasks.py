@@ -135,7 +135,7 @@ def download_receipt(receipt_id: str):
         result = parser.download(receipt_id)
         if result.get("status") == "success":
             redis_data = redis_client.hgetall(receipt_id)
-            image_path = redis_data.get("filename")
+            image_path = result.get("filename")
             chat_id_str = redis_data.get("telegram_id")
             from app.bot.main import send_image
             cel_helper.run(
@@ -162,6 +162,7 @@ def remove_file(filepath: str):
 @task_success.connect
 def task_success_handler(sender=None, result=None, **kwargs):
     logger.info(f"✅ Задача '{sender.name}' выполнена успешно")
+    logger.info(result)
     if sender.name == "app.celery.tasks.process_check":
         remove_file(settings.uploader.DIR / result.get("filename"))
     if sender.name == "app.celery.tasks.download_receipt":
