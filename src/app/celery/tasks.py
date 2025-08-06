@@ -144,16 +144,18 @@ def download_receipt(receipt_id: str):
                     image_path=image_path,
                 )
             )
-    except:
-        ...
+            redis_client.delete(receipt_id)
+        return result
+    except Exception as ex:
+        raise ex
 
 
 
-def remove_file(filename: str):
+def remove_file(filepath: str):
     try:
-        os.remove(os.path.abspath(settings.uploader.DIR / filename))
+        os.remove(os.path.abspath(filepath))
     except FileNotFoundError as ex:
-        logger.error(f"[ERROR] File not found {settings.uploader.DIR / filename}")
+        logger.error(f"[ERROR] File not found {filepath}")
 
 
 # Успешное выполнение задачи
@@ -161,7 +163,10 @@ def remove_file(filename: str):
 def task_success_handler(sender=None, result=None, **kwargs):
     logger.info(f"✅ Задача '{sender.name}' выполнена успешно")
     if sender.name == "app.celery.tasks.process_check":
+        remove_file(settings.uploader.DIR / result.get("filename"))
+    if sender.name == "app.celery.tasks.download_receipt":
         remove_file(result.get("filename"))
+
 
 
 # Ошибка при выполнении задачи
