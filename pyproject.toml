@@ -19,6 +19,7 @@ black = "^25.1.0"
 celery = {extras = ["redis"], version = "^5.5.3"}
 pydantic-extra-types = "^2.10.5"
 flower = "^2.0.1"
+setuptools = "^80.9.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

@@ -69,8 +69,7 @@ class Parser:
             self._get_by_photo(filename)
             return ParseJSON(self._download_dir).parse_json()
         finally:
-            if self._driver is not None:
-                self._driver.quit()
+            self.__close_resources()
             # Удаляем временную папку с файлами
             shutil.rmtree(self._download_dir, ignore_errors=True)
 
@@ -84,7 +83,7 @@ class Parser:
                 "status": "error",
             }
         try:
-            receipt_data = redis_client.get(receipt_id)
+            receipt_data = redis_client.hgetall(receipt_id)
             qr_data = receipt_data.get("qr_data")
             return self._get_by_qr_data(qr_data)
         except Exception as ex:
@@ -92,7 +91,8 @@ class Parser:
                 "status": "error",
                 "exception": ex,
             }
-
+        finally:
+            self.__close_resources()
 
     def _driver_run(self):
         try:
@@ -107,7 +107,7 @@ class Parser:
             options.add_experimental_option("prefs", prefs)
 
             options.binary_location = "/usr/bin/chromium"
-            options.add_argument("--headless=new")
+            # options.add_argument("--headless=new")
             options.add_argument("--disable-gpu")
             options.add_argument("--window-size=1920,1080")
             options.add_argument("--no-sandbox")
@@ -187,12 +187,14 @@ class Parser:
             logger.error(f"Ошибка при обработке чека: {str(ex)}")
             raise BadQRCodeError
 
-    def _get_by_qr_data(self, data: str, max_retries: int = 2, wait_timeout: int = 10):
+    def _get_by_qr_data(self, data: str, max_retries: int = 3, wait_timeout: int = 10):
         self._driver.get(settings.parser.main_url)
 
         logger.info('Ожидаем и кликаем вкладку "Строка"')
         tab = WebDriverWait(self._driver, 5).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[href="#b-checkform_tab-qrraw"]'))
+            EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, 'a[href="#b-checkform_tab-qrraw"]')
+            )
         )
         tab.click()
 
@@ -205,27 +207,56 @@ class Parser:
         textarea.clear()
         textarea.send_keys(data)
 
-        logger.info("Ожидаем кнопку 'Проверить' и кликаем")
-        submit_button = WebDriverWait(self._driver, 5).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, ".b-checkform_btn-send"))
+        parent_block = WebDriverWait(self._driver, 10).until(
+            EC.presence_of_element_located((By.ID, "b-checkform_tab-qrraw"))
         )
+
+        logger.info("Ожидаем кнопку 'Проверить' и кликаем")
+        submit_button = WebDriverWait(parent_block, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "button.b-checkform_btn-send"))
+        )
+
         for attempt in range(max_retries):
-            submit_button.click()
+            self._driver.execute_script("arguments[0].click();", submit_button)
             try:
                 # Ждем появления блока с чеком
                 check_block = WebDriverWait(self._driver, wait_timeout).until(
-                    EC.visibility_of_element_located((By.CSS_SELECTOR, ".b-check_table-place"))
+                    EC.visibility_of_element_located(
+                        (By.CSS_SELECTOR, ".b-check_table-place")
+                    )
                 )
                 # Скриншот области
-                filename = self._download_dir / f"{uuid.uuid4()}.jpeg"
+                filename = f"{self._download_dir}/{uuid.uuid4()}.png"
                 check_block.screenshot(filename)
-
+                logger.info("Filename: %s", filename)
                 return {
                     "status": "success",
                     "filename": filename,
                 }
 
             except TimeoutException:
-                logger.warning(f"Попытка {attempt + 1}: блок с чеком не появился, повторяем нажатие кнопки")
+                logger.warning(
+                    f"Попытка {attempt + 1}: блок с чеком не появился, повторяем нажатие кнопки"
+                )
+            except Exception as ex:
+                logger.error(ex)
+                raise ex
 
         raise Exception("Не удалось получить чек после нескольких попыток")
+
+    def __close_resources(self):
+        logger.info("Закрытие ресурсов...")
+        if self._driver:
+            self._driver.quit()
+            logger.info("Драйвер закрыт.")
+
+
+# parser = Parser()
+#
+#
+# def main():
+#     parser.download("receipt_5859988359079031000")
+#
+#
+# if __name__ == "__main__":
+#     main()
