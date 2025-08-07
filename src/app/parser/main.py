@@ -230,6 +230,14 @@ class Parser:
                     )
                 )
 
+                self._driver.execute_script(
+                    """
+                    let all = document.querySelectorAll('body *:not(.b-check_table-place)');
+                    all.forEach(el => el.dataset.oldDisplay = el.style.display);
+                    all.forEach(el => el.style.display = 'none');
+                """
+                )
+
                 # Получаем размеры блока
                 size = check_block.size
                 width = size["width"]
@@ -274,12 +282,12 @@ class Parser:
             logger.info("Драйвер закрыт.")
 
 
-# parser = Parser()
-#
-#
-# def main():
-#     parser.download("receipt_5859988359079031000")
-#
-#
-# if __name__ == "__main__":
-#     main()
+parser = Parser()
+
+
+def main():
+    parser.download("receipt_5859988359079031000")
+
+
+if __name__ == "__main__":
+    main()
