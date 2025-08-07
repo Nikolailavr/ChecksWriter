@@ -48,9 +48,10 @@ class ParseJSON:
 
 
 class Parser:
-    def __init__(self):
+    def __init__(self, test: bool = False):
         self._driver = None
         self._download_dir = None
+        self.__test = test
 
     def check(self, filename: str):
         self._download_dir = tempfile.mkdtemp()
@@ -107,7 +108,8 @@ class Parser:
             options.add_experimental_option("prefs", prefs)
 
             options.binary_location = "/usr/bin/chromium"
-            options.add_argument("--headless=new")
+            if not self.__test:
+                options.add_argument("--headless=new")
             options.add_argument("--disable-gpu")
             options.add_argument("--window-size=1920,1080")
             options.add_argument("--no-sandbox")
@@ -232,9 +234,10 @@ class Parser:
 
                 self._driver.execute_script(
                     """
-                    let all = document.querySelectorAll('body *:not(.b-check_table-place)');
-                    all.forEach(el => el.dataset.oldDisplay = el.style.display);
-                    all.forEach(el => el.style.display = 'none');
+                    const footer = document.querySelector('.b-footer_sticky-block');
+                    if (footer) {
+                        footer.style.display = 'none';
+                    }
                 """
                 )
 
@@ -282,12 +285,12 @@ class Parser:
             logger.info("Драйвер закрыт.")
 
 
-parser = Parser()
-
-
-def main():
-    parser.download("receipt_5859988359079031000")
-
-
-if __name__ == "__main__":
-    main()
+# parser = Parser(test=True)
+#
+#
+# def main():
+#     parser.download("receipt_5866997216081361000")
+#
+#
+# if __name__ == "__main__":
+#     main()
