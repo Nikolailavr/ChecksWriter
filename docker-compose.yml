@@ -22,32 +22,26 @@ services:
     volumes:
       - .:/app
       - shared-data:/app/shared
-    working_dir:
-      /app
+    working_dir: /app
     environment:
       - PYTHONPATH=/app/src
     restart: unless-stopped
-
-  flower:
-      build:
-        context: .
-        dockerfile: ./docker-build/app/Dockerfile_base
-      container_name: checks_flower
-      command: celery -A app.celery.celery_app flower --port=5555 \
-        --basic_auth=${APP_CONFIG__FLOWER__USER}:${APP_CONFIG__FLOWER__PASSWORD}
-      volumes:
-        - .:/app
-      working_dir: /app
-      environment:
-        PYTHONPATH: /app/src
-      ports:
-        - "8443:5555"
-      restart: unless-stopped
+#  flower:
+#      build:
+#        context: .
+#        dockerfile: ./docker-build/app/Dockerfile_base
+#      container_name: checks_flower
+#      command: celery -A app.celery.celery_app flower --port=5555 \
+#        --basic_auth=${APP_CONFIG__FLOWER__USER}:${APP_CONFIG__FLOWER__PASSWORD}
+#      volumes:
+#        - .:/app
+#      working_dir: /app
+#      environment:
+#        PYTHONPATH: /app/src
+#      ports:
+#        - "8443:5555"
+#      restart: unless-stopped
 
 volumes:
   shared-data:
-
-networks:
-  default:
-    external:
-      name: shared_network
+  
