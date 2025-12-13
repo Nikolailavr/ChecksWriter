@@ -76,11 +76,6 @@ class Redis(BaseModel):
     DB: int
 
 
-class Flower(BaseModel):
-    user: str
-    password: str
-
-
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(
@@ -99,7 +94,6 @@ class Settings(BaseSettings):
     schedule: Schedule
     celery: Celery
     redis: Redis
-    flower: Flower
 
 
 settings = Settings()
