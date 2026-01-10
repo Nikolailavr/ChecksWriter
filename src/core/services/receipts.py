@@ -19,13 +19,13 @@ class ReceiptService:
             return receipt
 
     @staticmethod
-    async def get_categories(telegram_id: int) -> list[str]:
+    async def get_categories(telegram_id: int) -> Sequence[str]:
         async with db_helper.get_session() as session:
             categories = await ReceiptRepository(session).get(telegram_id)
             return categories
 
     @staticmethod
-    async def get_receipts(telegram_id: int, category: str) -> list[Receipt]:
+    async def get_receipts(telegram_id: int, category: str) -> Sequence[Receipt]:
         async with db_helper.get_session() as session:
             receipts = await ReceiptRepository(session).get(telegram_id, category)
             return receipts
