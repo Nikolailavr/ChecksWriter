@@ -26,6 +26,8 @@ class DatabaseHelper:
             echo_pool=echo_pool,
             max_overflow=max_overflow,
             pool_size=pool_size,
+            pool_recycle=3600,  # Пересоздавать соединение каждый час
+            pool_pre_ping=True  # Проверять живое ли соединение перед выдачей из пула
         )
         self.session_factory: async_sessionmaker[AsyncSession] = async_sessionmaker(
             bind=self.engine,

@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Sequence
 
 from sqlalchemy import select, delete, update
@@ -8,6 +9,7 @@ from sqlalchemy.orm import joinedload
 from core.database.models import Receipt, ReceiptItem
 from core.database.schemas import ReceiptSchema
 
+logger = logging.getLogger(__name__)
 
 class ReceiptRepository:
     def __init__(self, session: AsyncSession):
@@ -78,7 +80,7 @@ class ReceiptRepository:
 
     async def get(
         self, telegram_id: int, category: str = None
-    ) -> list[Receipt] | list[str]:
+    ) -> Sequence[Receipt] | Sequence[str]:
         try:
             if category:
                 stmt = (
@@ -96,9 +98,10 @@ class ReceiptRepository:
                     .distinct()
                 )
                 result = await self.session.execute(stmt)
-                result = [row[0] for row in result.fetchall() if row[0]]
+                result = result.scalars().all()
             return result
         except SQLAlchemyError as ex:
+            logger.error(f"Database error: {ex}")
             raise ex
 
     async def get_receipt_items(self, receipt_id: str) -> Sequence[ReceiptItem]:
