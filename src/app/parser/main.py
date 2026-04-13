@@ -285,12 +285,12 @@ class Parser:
             logger.info("Драйвер закрыт.")
 
 
-# parser = Parser(test=True)
-#
-#
-# def main():
-#     parser.download("receipt_5866997216081361000")
-#
-#
-# if __name__ == "__main__":
-#     main()
+parser = Parser(test=True)
+
+
+def main():
+    parser.check("file.jpg")
+
+
+if __name__ == "__main__":
+    main()
