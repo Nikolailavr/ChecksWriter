@@ -57,7 +57,7 @@ class Parser(BaseModel):
 
 
 class Uploader(BaseModel):
-    DIR: str = BASE_DIR / "app/shared/uploads"
+    DIR: str = Path("app/shared/uploads")
 
 
 class Schedule(BaseModel):
