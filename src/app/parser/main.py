@@ -3,11 +3,13 @@ import json
 import logging
 import os
 import shutil
+import subprocess
 import tempfile
 import time
 import uuid
 from pathlib import Path
 
+from webdriver_manager.chrome import ChromeDriverManager
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -95,6 +97,47 @@ class Parser:
         finally:
             self.__close_resources()
 
+    def _get_chromium_version(self):
+        try:
+            out = subprocess.run(
+                ["/usr/bin/chromium", "--version"], capture_output=True, text=True
+            ).stdout
+            import re
+            match = re.search(r"(\d+)", out)
+            return int(match.group(1)) if match else None
+        except Exception:
+            logger.warning("Не удалось определить версию Chromium")
+            return None
+
+    def _ensure_driver(self):
+        """Скачивает/обновляет драйвер если версия не совпадает, иначе берёт кэш"""
+        from webdriver_manager.core.os_manager import ChromeType
+        fresh_path = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+
+        target_path = settings.parser.driver_path
+
+        # Если файла нет или версии отличаются — копируем свежий
+        if not os.path.exists(target_path):
+            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+            shutil.copy2(fresh_path, target_path)
+            os.chmod(target_path, 0o755)
+            logger.info(f"ChromeDriver установлен: {target_path}")
+        else:
+            # Сравниваем версии
+            installed = subprocess.run(
+                [target_path, "--version"], capture_output=True, text=True
+            ).stdout.strip()
+            fresh = subprocess.run(
+                [fresh_path, "--version"], capture_output=True, text=True
+            ).stdout.strip()
+
+            if installed != fresh:
+                shutil.copy2(fresh_path, target_path)
+                os.chmod(target_path, 0o755)
+                logger.info(f"ChromeDriver обновлён: {installed} -> {fresh}")
+            else:
+                logger.info(f"ChromeDriver актуален: {installed}")
+
     def _driver_run(self):
         try:
             options = uc.ChromeOptions()
@@ -115,11 +158,12 @@ class Parser:
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
 
+            self._ensure_driver()  # <-- добавь перед созданием драйвера
             self._driver = uc.Chrome(
                 options=options,
                 driver_executable_path=settings.parser.driver_path,
                 use_subprocess=True,
-                # version_main=None,  # отключает автоопределение версии
+                version_main=self._get_chromium_version(),  # <-- вместо None
             )
             self._driver.implicitly_wait(5)
             self._driver.set_page_load_timeout(120)
