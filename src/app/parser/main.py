@@ -119,7 +119,7 @@ class Parser:
                 options=options,
                 driver_executable_path=settings.parser.driver_path,
                 use_subprocess=True,
-                version_main=None,  # отключает автоопределение версии
+                # version_main=None,  # отключает автоопределение версии
             )
             self._driver.implicitly_wait(5)
             self._driver.set_page_load_timeout(120)
