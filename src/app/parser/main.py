@@ -158,12 +158,14 @@ class Parser:
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
 
-            self._ensure_driver()  # <-- добавь перед созданием драйвера
+            # Используем системный chromedriver напрямую, без webdriver-manager и блокировок
+            driver_path = "/usr/bin/chromedriver" if os.path.exists("/usr/bin/chromedriver") else settings.parser.driver_path
+
             self._driver = uc.Chrome(
                 options=options,
-                driver_executable_path=settings.parser.driver_path,
+                driver_executable_path=driver_path,
                 use_subprocess=True,
-                version_main=self._get_chromium_version(),  # <-- вместо None
+                version_main=self._get_chromium_version(),
             )
             self._driver.implicitly_wait(5)
             self._driver.set_page_load_timeout(120)
